@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Camden-Edwaleni-Maputo Site Management V33 (Interactive QITP & Native Graphs)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e2e8f0; margin: 0; padding: 15px; color: #2d3748; display: flex; flex-direction: column; min-height: 100vh;}
+        .header { background-color: #0f172a; color: white; padding: 20px 25px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-bottom: 4px solid #3b82f6;}
+        .header h1 { margin: 0; font-size: 24px; letter-spacing: 0.5px;}
+        .header p { margin: 5px 0 0 0; color: #94a3b8; font-size: 13px; font-weight: 500;}
+        
+        .container { display: flex; gap: 15px; flex: 1; height: calc(100vh - 140px); }
+        .timeline { width: 230px; background: white; padding: 15px; border-radius: 8px; overflow-y: auto; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .day-card { border-left: 4px solid #cbd5e0; padding: 12px 10px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; background: #f8fafc; font-size: 13px; font-weight: 600; color: #475569;}
+        .day-card:hover { border-left-color: #3b82f6; background: #eff6ff; color: #1e40af;}
+        .day-card.active { border-left-color: #10b981; background: #ecfdf5; color: #065f46;}
+        
+        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-right: 5px; }
+        .section-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;}
+        .section-title { font-size: 16px; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 0; margin-bottom: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;}
+        
+        /* Dashboard Infographics */
+        .dashboard-grid { display: grid; grid-template-columns: 1.1fr 1.1fr 1fr 1.4fr; gap: 15px; margin-bottom: 10px; }
+        .widget { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative;}
+        .widget-title { font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 15px; width: 100%; text-align: left; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;}
+        
+        .donuts-container { display: flex; justify-content: space-around; width: 100%; margin-bottom: 5px; gap: 10px;}
+        .donut-col { display: flex; flex-direction: column; align-items: center; }
+        .donut-title { font-size: 10px; font-weight: 900; color: #475569; margin-bottom: 5px; text-transform: uppercase;}
+        .donut-wrapper { position: relative; width: 80px; height: 80px; }
+        .donut-chart { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#3b82f6 0%, #e2e8f0 0%); display: flex; align-items: center; justify-content: center; transition: background 0.5s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);}
+        .donut-inner { width: 55px; height: 55px; background: #ffffff; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .donut-val { font-size: 14px; font-weight: 900; color: #1e293b; }
+
+        .stacked-bar-container { width: 100%; height: 25px; background: #e2e8f0; border-radius: 4px; display: flex; overflow: hidden; margin: 15px 0;}
+        .sb-worked { background: #10b981; height: 100%; transition: width 0.5s; display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:bold;}
+        .sb-delay { background: #ef4444; height: 100%; transition: width 0.5s; display:flex; align-items:center; justify-content:center; color:white; font-size:11px; font-weight:bold;}
+        .legend { display: flex; justify-content: space-between; width: 100%; font-size: 11px; font-weight: 600; color: #64748b; margin-top: 5px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .inv-bar-wrap { width: 100%; margin-bottom: 5px; }
+        .inv-bar-label { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+        .bar-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; background: #3b82f6; transition: width 0.5s; }
+
+        /* Grids & Forms */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; }
+        .team-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; background: #f8fafc; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0;}
+        .team-grid label { font-size: 12px; color: #334155; display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer;}
+        
+        .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
+        .form-group label { font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit; font-size: 13px; background: #ffffff; color:#0f172a; font-weight:500;}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);}
+        
+        /* Tower Entry */
+        .tower-entry { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 6px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: start; margin-bottom:15px; border: 1px solid #e2e8f0; position: relative;}
+        .partial-phases { grid-column: 1 / -1; background: #fffbeb; padding: 10px; border: 1px dashed #f59e0b; border-radius: 4px; display: flex; gap: 15px; font-size: 12px; font-weight: bold; color: #b45309; align-items: center;}
+        
+        /* DYNAMIC QA GRID */
+        .qa-grid { grid-column: 1 / -1; background: #ffffff; padding: 15px; border-radius: 4px; border: 1px dashed #cbd5e1; margin-top: 5px; display: flex; flex-direction: column; gap: 8px;}
+        .qa-grid-title { font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 5px;}
+        .qa-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px; border-radius: 4px; border: 1px solid #e2e8f0;}
+        .qa-row label { font-size: 12px; font-weight: 700; color: #334155; width: 70%;}
+        .qa-row select { width: 25%; padding: 6px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: bold;}
+        
+        .farm-warning { position: absolute; top: -10px; right: 40px; background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; display: none; animation: pulse 1s infinite;}
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        .btn-add-tower { background: #3b82f6; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 13px; margin-top: 10px; transition: 0.2s;}
+        .btn-add-tower:hover { background: #2563eb; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; height: 38px;}
+
+        /* Inventory & HSE Tables */
+        .inv-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;}
+        .inv-table th, .inv-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; }
+        .inv-table th { background: #f1f5f9; color: #475569; font-weight: 800; text-transform: uppercase; font-size: 11px;}
+        .inv-input { width: 70px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; font-weight: bold; color: #0f172a;}
+        
+        .hse-row { display: flex; gap: 10px; background: #fff1f2; padding: 15px; border: 1px solid #fecdd3; border-radius: 6px; margin-bottom: 15px;}
+        .hse-row .form-group { flex: 1; margin: 0; }
+        .hse-row label { color: #be123c; }
+
+        .btn-group { display: flex; gap: 15px; margin-top: 10px; }
+        .export-btn { background: #1e293b; color: white; border: none; padding: 15px; font-size: 14px; font-weight: 800; border-radius: 6px; cursor: pointer; flex: 1; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;}
+        .export-btn:hover { background: #0f172a; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
+        .export-btn.weekly { background: #059669; }
+        .export-btn.weekly:hover { background: #047857; }
+        .footer-version { text-align: center; font-size: 10px; color: #94a3b8; padding-top: 10px; letter-spacing: 0.5px; }
+
+        /* Custom Native SVG Graph Tooltips */
+        .graph-interactive { transition: opacity 0.2s; cursor: pointer; }
+        .graph-interactive:hover { opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>Camden-Edwaleni-Maputo Site Management V33</h1>
+            <p>Supervisor: Thabiso Mahlangu | Contract: 32/MOT/2025 | Client: MOTRACO / Eskom NTCSA / EEC | Standard: ISO 9001 / LES 2207</p>
+        </div>
+        <div id="save-indicator" style="font-size: 12px; color: #10b981; font-weight: 800; padding: 5px 10px; background: rgba(16,185,129,0.1); border-radius: 4px; border: 1px solid #10b981;">Auto-Saving...</div>
+    </div>
+
+    <div class="container">
+        <div class="timeline" id="timeline"></div>
+
+        <div class="main-panel">
+            
+            <div class="section-card">
+                <div class="section-title">Commercial Executive Dashboard & Earned Value (EVM)</div>
+                <div class="dashboard-grid">
+                    
+                    <div class="widget">
+                        <div class="widget-title">PROJECT PROGRESS</div>
+                        <div class="donuts-container">
+                            <div class="donut-col">
+                                <div class="donut-title" style="color: #0284c7;">TOWERS</div>
+                                <div class="donut-wrapper"><div class="donut-chart" id="donut-prod-tow"><div class="donut-inner"><span class="donut-val" id="val-prod-tow-pct">0%</span></div></div></div>
+                            </div>
+                            <div class="donut-col">
+                                <div class="donut-title" style="color: #10b981;">INSULATORS</div>
+                                <div class="donut-wrapper"><div class="donut-chart" id="donut-prod-ins"><div class="donut-inner"><span class="donut-val" id="val-prod-ins-pct">0%</span></div></div></div>
+                            </div>
+                        </div>
+                        <div style="margin-top:15px; width:100%; font-size:10px; font-weight:800; color:#475569; background:#f8fafc; padding:8px; border-radius:4px; border:1px solid #e2e8f0;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                                <span>TOWERS DONE: <span id="tot-tow-done" style="color:#0284c7; font-size: 12px;">0</span></span>
+                                <span>LEFT: <span id="tot-tow-rem" style="color:#ef4444;">515</span></span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>INSULATORS DONE: <span id="tot-ins-done" style="color:#10b981; font-size: 12px;">0</span></span>
+                                <span>LEFT: <span id="tot-ins-rem" style="color:#ef4444;">2321</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget" style="background: #f0f9ff; border-color: #bae6fd;">
+                        <div class="widget-title" style="color: #0369a1; border-bottom-color: #e0f2fe;">TODAY'S SNAPSHOT & EVM</div>
+                        <div class="grid-2" style="width: 100%; gap: 10px; margin-bottom: 10px;">
+                            <div style="background: white; padding: 10px; border-radius: 4px; text-align: center; border: 1px solid #e0f2fe;">
+                                <div style="font-size: 10px; font-weight: 800; color: #64748b;">TOWERS TODAY</div>
+                                <div id="dash-towers-today" style="font-size: 24px; font-weight: 900; color: #0284c7;">0</div>
+                            </div>
+                            <div style="background: white; padding: 10px; border-radius: 4px; text-align: center; border: 1px solid #e0f2fe;">
+                                <div style="font-size: 10px; font-weight: 800; color: #64748b;">INSULATORS</div>
+                                <div id="dash-ins-today" style="font-size: 24px; font-weight: 900; color: #0284c7;">0</div>
+                            </div>
+                        </div>
+                        <div style="text-align:center; width:100%; background: white; padding: 8px; border-radius: 4px; border: 1px solid #e0f2fe;">
+                            <div style="font-size:10px; font-weight:700; color:#475569;">SCHEDULE PERFORMANCE (SPI)</div>
+                            <div id="spi-val" style="font-size:20px; font-weight:900; color:#10b981; margin-bottom:5px;">1.00</div>
+                            <div style="display:flex; justify-content: space-between; font-size:9px; font-weight:800;">
+                                <span style="color:#64748b;">EST COMP (INC DELAYS): <span id="est-comp-bad" style="color:#ef4444;">...</span></span>
+                                <span style="color:#64748b;">EST COMP (WORK): <span id="est-comp-good" style="color:#0284c7;">...</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-title">Schedule Tracker & Target Matrix</div>
+                        <div style="font-size: 11px; font-weight: 600; width: 100%; text-align: left; color: #64748b;">Available Days (to Aug 31): <span id="tot-days"></span></div>
+                        <div class="stacked-bar-container">
+                            <div class="sb-worked" id="sb-work" style="width: 0%;">0</div>
+                            <div class="sb-delay" id="sb-del" style="width: 0%;">0</div>
+                        </div>
+                        <div class="legend">
+                            <div class="legend-item"><div class="dot" style="background:#10b981;"></div> Worked</div>
+                            <div class="legend-item"><div class="dot" style="background:#ef4444;"></div> Delayed</div>
+                        </div>
+                        <div style="margin-top: 15px; width:100%; text-align:center; background: #f8fafc; padding: 12px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; font-weight: 800; color: #475569;">STATUS (2/DAY TARGET)</span><br>
+                            <span id="info-status" style="font-size: 14px; font-weight: 900; color: #10b981; display: block; margin-top: 5px;">ON SCHEDULE</span>
+                        </div>
+                        <div style="width:100%; text-align:center; font-size: 10px; font-weight: 800; color: #be123c; background: #fff1f2; padding: 5px; border-radius: 4px; border: 1px solid #fecdd3; margin-top: 10px; box-sizing: border-box;">
+                            CLIENT/OUTAGE DELAYS: <span id="info-client-delays" style="font-size: 12px; font-weight: 900;">0 Days</span>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-title">Critical Hardware Tracker</div>
+                        <div class="inv-grid">
+                            <div class="inv-bar-wrap"><div class="inv-bar-label"><span>120kN Longrods</span> <span id="lbl-bar-120">0/1437</span></div><div class="bar-bg"><div class="bar-fill" id="bar-fill-120" style="width: 0%;"></div></div></div>
+                            <div class="inv-bar-wrap"><div class="inv-bar-label"><span>210kN Longrods</span> <span id="lbl-bar-210">0/884</span></div><div class="bar-bg"><div class="bar-fill" id="bar-fill-210" style="width: 0%;"></div></div></div>
+                            <div class="inv-bar-wrap"><div class="inv-bar-label"><span>Socket Clevis</span> <span id="lbl-bar-sclv">0/1513</span></div><div class="bar-bg"><div class="bar-fill" id="bar-fill-sclv" style="width: 0%; background: #f59e0b;"></div></div></div>
+                            <div class="inv-bar-wrap"><div class="inv-bar-label"><span>Ball Oval Eye</span> <span id="lbl-bar-boeye">0/1325</span></div><div class="bar-bg"><div class="bar-fill" id="bar-fill-boeye" style="width: 0%; background: #f59e0b;"></div></div></div>
+                            <div class="inv-bar-wrap"><div class="inv-bar-label"><span>Ball Clevis</span> <span id="lbl-bar-bclv">0/203</span></div><div class="bar-bg"><div class="bar-fill" id="bar-fill-bclv" style="width: 0%; background: #8b5cf6;"></div></div></div>
+                            <div class="inv-bar-wrap"><div class="inv-bar-label"><span>Shackles</span> <span id="lbl-bar-shk">0/1513</span></div><div class="bar-bg"><div class="bar-fill" id="bar-fill-shk" style="width: 0%; background: #8b5cf6;"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Visual Production & Flat-Day Analysis</div>
+                <div class="grid-2">
+                    <div class="widget" style="align-items: flex-start;">
+                        <div class="widget-title">DAILY TOWERS ERECTED</div>
+                        <div id="graph-towers" style="width: 100%; height: 250px;"></div>
+                    </div>
+                    <div class="widget" style="align-items: flex-start;">
+                        <div class="widget-title">DAILY INSULATORS INSTALLED</div>
+                        <div id="graph-insulators" style="width: 100%; height: 250px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Site Operations, Environmental & Outage Data</div>
+                
+                <div class="grid-4" style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                    <div class="form-group" style="margin:0;"><label>Temperature (°C)</label><input type="text" id="env-temp" oninput="autoSave()" placeholder="e.g. 24°C"></div>
+                    <div class="form-group" style="margin:0;"><label>Humidity (%)</label><input type="text" id="env-hum" oninput="autoSave()" placeholder="e.g. 70%"></div>
+                    <div class="form-group" style="margin:0;"><label>Peak Wind</label><input type="text" id="env-wind" oninput="autoSave()" placeholder="e.g. 10 km/h"></div>
+                    <div class="form-group" style="margin:0;"><label>Total Site Headcount</label><input type="number" id="site-headcount" oninput="autoSave()" placeholder="e.g. 12"></div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>Outage Status</label>
+                        <select id="outage-stat" onchange="autoSave()">
+                            <option value="Confirmed / Live">Confirmed / Live</option>
+                            <option value="Requested (Pending NTCSA)">Requested (Pending NTCSA)</option>
+                            <option value="Requested (Pending MOTRACO)">Requested (Pending MOTRACO)</option>
+                            <option value="Cancelled by Grid">Cancelled by Grid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Schedule Delay / Standing Time</label>
+                        <select id="is-delay" onchange="autoSave()">
+                            <option value="No">No Delay - Target Achieved</option>
+                            <option value="Weather">Delay: Adverse Weather (Rain/Wind)</option>
+                            <option value="Outage">Delay: Client Outage Cancelled</option>
+                            <option value="Access">Delay: Landowner Access Denied</option>
+                            <option value="Material">Delay: Material Shortage</option>
+                            <option value="Contractor">Delay: Contractor Fault / Breakdown</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Defect Scope (If Applicable)</label>
+                        <input type="text" id="defect-scope" oninput="autoSave()" placeholder="Leave blank if none">
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Plant & Machinery on Site</label>
+                        <input type="text" id="plant" oninput="autoSave()" placeholder="e.g. 4X LDVs, 1X Truck">
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Registrations</label>
+                        <input type="text" id="plant-regs" oninput="autoSave()" placeholder="e.g. AB 12 CD GP">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Core Project Team & Daily Staff Checklist</label>
+                    <div class="team-grid">
+                        <label><input type="checkbox" id="tm-0" onchange="autoSave()"> Thabiso Mahlangu</label>
+                        <label><input type="checkbox" id="tm-1" onchange="autoSave()"> Stefan Bronkhorst</label>
+                        <label><input type="checkbox" id="tm-2" onchange="autoSave()"> Freddy Lategaan Jnr</label>
+                        <label><input type="checkbox" id="tm-3" onchange="autoSave()"> Freddy Lategaan Snr</label>
+                        <label><input type="checkbox" id="tm-4" onchange="autoSave()"> Louw Oosthuizen</label>
+                        <label><input type="checkbox" id="tm-5" onchange="autoSave()"> Serame Molore</label>
+                        <label><input type="checkbox" id="tm-6" onchange="autoSave()"> Robert Molefe</label>
+                        <label><input type="checkbox" id="tm-7" onchange="autoSave()"> Sipho Thotse</label>
+                        <label><input type="checkbox" id="tm-8" onchange="autoSave()"> Shaun Arends</label>
+                        <label><input type="checkbox" id="tm-9" onchange="autoSave()"> Thato Molefe</label>
+                        <label><input type="checkbox" id="tm-10" onchange="autoSave()"> Happy Nene</label>
+                        <label><input type="checkbox" id="tm-11" onchange="autoSave()"> Sipho Zikhali</label>
+                        <label><input type="checkbox" id="tm-12" onchange="autoSave()"> January Msiza</label>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="form-group"><label>External Visitors & Deliveries</label><textarea id="visitors" oninput="autoSave()" style="min-height: 80px;"></textarea></div>
+                    <div class="form-group"><label>Chronological Timeline</label><textarea id="chrono-log" oninput="autoSave()" style="min-height: 80px; font-family: monospace;"></textarea></div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Tower Production, Partial Phases & INTERACTIVE QITP Log</div>
+                <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 15px; border-left: 4px solid #f59e0b; padding-left: 10px;">
+                    Select the Tower Type to reveal the correct QITP questions. Explicitly select "Pass (Tick)" or "Fail (X)" for each question. These selections will print directly onto your final Word document.
+                </div>
+                <div id="tower-container"></div>
+                <button class="btn-add-tower" onclick="addTower()">+ Add New Tower Record</button>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title" style="color: #c2410c; border-bottom-color: #ffedd5;">Project Controls: Risk, QA Deviations & Forward Planning</div>
+                <div class="grid-2">
+                    <div class="form-group"><label style="color:#b45309;">NCRs / QA Deviations</label><textarea id="ncr-log" oninput="autoSave()" style="min-height: 60px; background: #fffbeb;"></textarea></div>
+                    <div class="form-group"><label style="color:#b45309;">Early Warning Notices (EWN)</label><textarea id="ewn-log" oninput="autoSave()" style="min-height: 60px; background: #fffbeb;"></textarea></div>
+                </div>
+                <div class="form-group"><label style="color:#0369a1;">24-Hour Look-Ahead Plan</label><textarea id="look-ahead" oninput="autoSave()" style="min-height: 60px; background: #f0f9ff;"></textarea></div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">HSE KPIs & Quality Controls</div>
+                <div class="hse-row">
+                    <div class="form-group"><label>Unsafe Acts</label><input type="number" id="hse-ua" value="0" min="0" oninput="autoSave()"></div>
+                    <div class="form-group"><label>Near Misses</label><input type="number" id="hse-nm" value="0" min="0" oninput="autoSave()"></div>
+                    <div class="form-group"><label>First Aid Cases</label><input type="number" id="hse-fa" value="0" min="0" oninput="autoSave()"></div>
+                    <div class="form-group"><label>Lost Time Injuries (LTI)</label><input type="number" id="hse-lti" value="0" min="0" oninput="autoSave()"></div>
+                </div>
+                <div class="form-group" style="margin-top: 10px;"><label>Safety Toolbox Talk Topic</label><textarea id="toolbox" oninput="autoSave()" style="min-height: 40px;"></textarea></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Safety & Tool Box Notes</label><textarea id="safety-notes" oninput="autoSave()" style="min-height: 100px;"></textarea></div>
+                    <div class="form-group"><label>Environmental & Farm Access</label><textarea id="env-notes" oninput="autoSave()" style="min-height: 100px;"></textarea></div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Daily Hardware Consumption Tracker</div>
+                <table class="inv-table">
+                    <tr><th>MATERIAL COMPONENT</th><th>INSTALLED TODAY</th><th>SCRAP TODAY</th></tr>
+                    <tr><td align="left"><b>120kN Composite Longrods</b></td><td><input type="number" class="inv-input" id="i120" min="0" oninput="autoSave()"></td><td><input type="number" class="inv-input" id="d120" min="0" oninput="autoSave()"></td></tr>
+                    <tr><td align="left"><b>210kN Composite Longrods</b></td><td><input type="number" class="inv-input" id="i210" min="0" oninput="autoSave()"></td><td><input type="number" class="inv-input" id="d210" min="0" oninput="autoSave()"></td></tr>
+                    <tr><td align="left"><b>Socket Clevis (120kN)</b></td><td><input type="number" class="inv-input" id="isclv" min="0" oninput="autoSave()"></td><td><input type="number" class="inv-input" id="dsclv" min="0" oninput="autoSave()"></td></tr>
+                    <tr><td align="left"><b>Ball Oval Eye (120kN)</b></td><td><input type="number" class="inv-input" id="iboeye" min="0" oninput="autoSave()"></td><td><input type="number" class="inv-input" id="dboeye" min="0" oninput="autoSave()"></td></tr>
+                    <tr><td align="left"><b>Ball Clevis (120kN)</b></td><td><input type="number" class="inv-input" id="ibclv" min="0" oninput="autoSave()"></td><td><input type="number" class="inv-input" id="dbclv" min="0" oninput="autoSave()"></td></tr>
+                    <tr><td align="left"><b>Shackles for Suspension</b></td><td><input type="number" class="inv-input" id="ishk" min="0" oninput="autoSave()"></td><td><input type="number" class="inv-input" id="dshk" min="0" oninput="autoSave()"></td></tr>
+                </table>
+            </div>
+
+            <div class="section-card">
+                <div class="btn-group">
+                    <button class="export-btn" onclick="exportWordDoc(false)">Generate DAILY Report + QITPs (.doc)</button>
+                    <button class="export-btn weekly" onclick="exportWordDoc(true)">Generate WEEKLY Claims Report (.doc)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer-version">Version Control: V33 (Interactive Pass/Fail Dropdowns for QITPs + Native SVG Dashboards)</div>
+
+    <script>
+        // =========================================================================
+        // SIGNATURE CONFIGURATION
+        // =========================================================================
+        const freddySigBase64 = "";
+        const thabisoSigBase64 = "";
+        // =========================================================================
+
+        const totalProjTowers = 515;
+        const targetRate = 2; 
+        const defaultPlant = "4X LDVs, 1X Truck";
+        const defaultRegs = "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)";
+        const masterInv = { i120: 1437, i210: 884, sclv: 1513, boeye: 1325, bclv: 203, shk: 1513 };
+        
+        const coreTeamNames = [
+            "Thabiso Mahlangu (AE)", "Stefan Bronkhorst (MC)", "Freddy Lategaan Jnr (MC)", 
+            "Freddy Lategaan Snr (MC)", "Louw Oosthuizen (MC)", "Serame Molore", "Robert Molefe", 
+            "Sipho Thotse", "Shaun Arends", "Thato Molefe", "Happy Nene", "Sipho Zikhali", "January Msiza"
+        ];
+
+        const defaultSafety = "Daily ORHVS Risk Assessment completed. 100% double-lanyard tie-off monitored. All earths visually verified.";
+        const defaultEnv = "EMP adhered to. No hydrocarbon spills. Right-of-Way cleared. Farm tracks utilized.";
+        const defaultNCR = "No Non-Conformance Reports (NCR) issued today. QA standards fully met.";
+        const defaultEWN = "No Early Warning Notices (EWN) or schedule risks realized today.";
+        const defaultLookAhead = "Continue standard insulator replacements on sequence. Ensure hardware is staged at base of next day's towers. Verify farm access with Eskom/Motraco Rep.";
+        const defaultChrono = "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n15:30 - Work Ceased & Site Secured\n16:00 - Departed Site";
+
+        function sanitizeQA(val) {
+            if(val === true) return 'pass';
+            if(val === false || val === '') return '';
+            return val;
+        }
+
+        const historicalData = {"Tue, 07 Apr 2026": {"wthr": "Rain / High Humidity - Work Halted", "isDelay": "Weather", "topic": "Wet Weather Hazards and Fall Prevention", "envTemp": "17\u00b0C", "envHum": "83%", "envWind": "19 km/h from east", "outage": "Confirmed / Live", "headcount": "8", "plant": "3X LDV Bakkies, 1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "", "team": [true, false, true, true, false, false, false, false, false, false, false, false, false], "visitors": "1. David From Siyazama\n2. \n3. \n4. ", "chrono": "07:00 - Arrival & Site Establishment\n07:30 Toolbox Talk & ORHVS Handover\n08:00 -Installation Work halted due to Bad Weather\n10:00 - Footage Capturing training by David\n12:30-Work Ceased & Site Secured\n13:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Start standard insulator replacements on sequence staring from Strain Tower 2 near the Power Station and possible work on Tower 4. Ensure hardware is staged at base of Thursday's towers. Verify farm access.", "sNot": "Daily ORHVS Risk Assessment completed. Site operations formally suspended due to adverse weather conditions in Ermelo.", "envNot": "Access gates kept closed and locked immediately after passage.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": []}, "Wed, 08 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "22\u00b0C", "envHum": "72%", "envWind": "10 km/h from east", "outage": "Confirmed / Live", "headcount": "10", "plant": "2X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "", "team": [true, false, true, true, false, false, false, false, false, false, false, false, false], "visitors": "1. David From Siyazama", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n15:30 - Work Ceased & Site Secured\n16:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "Site Update: Operational Constraints and Progress", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Access gates kept closed and locked immediately after passage.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 10, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "2", "type": "515 C/D/E (Strain)", "farm": "Camden Power Station", "gps": "-26.612303, 30.094575", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Thu, 09 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "24\u00b0C", "envHum": "70%", "envWind": "10 km/h from east", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "", "team": [true, false, true, true, false, false, false, false, false, false, false, false, false], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n16:30 - Work Ceased & Site Secured\n17:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "Tension Insulator Clearance Constraint on Tower 4. Sharp strain angle on outer phase. Only 10/12 insulators installed. Remaining 2 require live-line equipment to pull insulator without encroaching clearance.", "lookAhead": "Continue standard insulator replacements on sequence Next two Towers to do Is Tower 47 and to 54 both strain towers.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Access gates kept closed and locked immediately after passage.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 10, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "4", "type": "515 C/D/E (Strain)", "farm": "Neer Camden Power Station", "gps": "-26.612303, 30.094575", "status": "Partial", "pL": true, "pC": true, "pR": false, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "fail", "qa5": "pass", "notes": "Sharp strain angle on outer phase prevented safe installation of last 2 insulators. Deferred until live-line equipment is available."}]}, "Fri, 10 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "27\u00b0C", "envHum": "68%", "envWind": "16 km/h from east", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, false, true, true, false, true, true, true, false, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n16:30 - Work Ceased & Site Secured\n17:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 24, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "47", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}, {"num": "57", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Sat, 11 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "24\u00b0C", "envHum": "57%", "envWind": "10 km/h from east", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, false, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n16:30 - Work Ceased & Site Secured\n17:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 24, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "64", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}, {"num": "83", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Mon, 13 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "22\u00b0C", "envHum": "56%", "envWind": "11 km/h from east", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, false, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks \n14:15 - Work Ceased due to lighting & Site Secured\n16:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today..", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 20, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "102", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Partial", "pL": true, "pC": false, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. Installed 8 insulators."}, {"num": "104", "type": "524 HS (Suspension)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Tue, 14 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "22\u00b0C", "envHum": "62%", "envWind": "16.1 km/h from east", "outage": "Confirmed / Live", "headcount": "16", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)\nVisitors: LR91MVGP (Ford Ranger), LD11GDGP(Hyundai)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "1. Eddie (NTCSA)\n2. Madoda (NTCSA)", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works and NTCSA Assessment\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n15:30 - Work Ceased & Site Secured\n16:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today..", "lookAhead": "Continue standard insulator replacements on towers 16,17 & 18 and do NTCSA Assesment.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 12, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "15", "type": "515 C/D/E (Strain)", "farm": "Near Camden PS", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Wed, 15 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "19\u00b0C", "envHum": "69%", "envWind": "11.2 km/h", "outage": "Confirmed / Live", "headcount": "14", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)\nVisitors: LR91MVGP (Ford Ranger), LD11GDGP(Hyundai)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "1. Eddie (NTCSA)\n2. Madoda (NTCSA)", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works and NTCSA Assessment\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n15:30 - Work Ceased & Site Secured\n16:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on strain Towers.T129 & T136 I identified.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 3, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "T16", "type": "524 HS (Suspension)", "farm": "Near Camden PS", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Thu, 16 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "23\u00b0C", "envHum": "65%", "envWind": "16.1 km/h", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Monitoring the Weather\n10:00 - QITP Clearance Checks\n13:00 - Work Ceased & Site Secured\n13:30 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "No standard insulator replacements on sequence done today.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": []}, "Fri, 17 Apr 2026": {"wthr": "Rain / High Humidity - Work Halted", "isDelay": "Weather", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "24\u00b0C", "envHum": "69%", "envWind": "16 k/h from the northwest", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:30 - Work Ceased due t incoming storm& Site Secured\n15:30 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 12, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "129", "type": "515 C/D/E (Strain)", "farm": "Grow & More ,Kolwani, AE4", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Sat, 18 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "25\u00b0C", "envHum": "59%", "envWind": "19 km/h from east", "outage": "Confirmed / Live", "headcount": "11", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, false, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n15:00 - Work Ceased & Site Secured\n15:30 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 24, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "136", "type": "515 C/D/E (Strain)", "farm": "Farm Near Amsterdam", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}, {"num": "139", "type": "515 C/D/E (Strain)", "farm": "Farm Near Amstedam", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Mon, 20 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "24\u00b0C", "envHum": "62%", "envWind": "15 km/h", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDV\u2019 Bakkies,1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, false, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n15:00 - Work Ceased & Site Secured\n15:30 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today..", "lookAhead": "Continue standard insulator replacements on T167.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 24, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "T157", "type": "515 C/D/E (Strain)", "farm": "Near Amsterdam", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}, {"num": "T163", "type": "515 C/D/E (Strain)", "farm": "Near Amsterdam", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications. All replacement hardware verified against original BOM quantities."}]}, "Tue, 21 Apr 2026": {"wthr": "Rain / High Humidity - Work Halted", "isDelay": "Weather", "topic": "Wet Weather Hazards and Fall Prevention", "envTemp": "19\u00b0C", "envHum": "53%", "envWind": "9 km/h from east", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDVs, 1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Weather Conditions not conducive to work.\n10:00 - Monitoring the weather\n13:30 - Work Ceased & Site Secured\n14:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": []}, "Wed, 22 Apr 2026": {"wthr": "Rain / High Humidity - Work Halted", "isDelay": "Weather", "topic": "Wet Weather Hazards and Fall Prevention", "envTemp": "18\u00b0C", "envHum": "80%", "envWind": "12 km/h from east", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDVs, 1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk\n08:00 - Weather Conditions not conducive to work despite granted outage.\n10:00 - Monitoring the weather\n13:00 - Work Ceased & Site Secured\n13:30 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": []}, "Sat, 25 Apr 2026": {"wthr": "Clear / Optimal / No Delay", "isDelay": "No", "topic": "Working at Heights, ORHVS Clearances", "envTemp": "22\u00b0C", "envHum": "55%", "envWind": "12 km/h", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDVs, 1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works\n10:00 - QITP Clearance Checks\n13:00 - Lunch Break\n16:00 - Work Ceased & Site Secured\n16:30 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "No Early Warning Notices (EWN) or schedule risks realized today.", "lookAhead": "Continue standard insulator replacements on sequence.", "sNot": "Daily ORHVS Risk Assessment completed and signed.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 16, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "167", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Torque applied to all bolts as per LES 2207 specifications."}, {"num": "102", "type": "515 C/D/E (Strain)", "farm": "N/A", "gps": "N/A", "status": "Complete", "pL": true, "pC": true, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "pass", "qa5": "pass", "notes": "Completed the remaining 4 insulators on the center phase for Tower 102. Torque applied to all bolts as per LES 2207 specifications."}]}, "Mon, 27 Apr 2026": {"wthr": "High Winds - Work Halted Early", "isDelay": "Weather", "topic": "Working at Heights, ORHVS Clearances, Hardware Mitigation", "envTemp": "20\u00b0C", "envHum": "60%", "envWind": "35 km/h", "outage": "Confirmed / Live", "headcount": "12", "plant": "4X LDVs, 1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival & Site Establishment\n07:30 - Toolbox Talk & ORHVS Handover\n08:00 - Commenced Tower Works on IVI structure\n09:30 - Hardware mismatch identified on center phase\n11:00 - Attempted bridging mitigation; failed due to clearance\n12:30 - Work ceased due to high winds and hardware issues\n13:00 - Departed Site", "ncr": "No Non-Conformance Reports (NCR) issued today. QA standards fully met.", "ewn": "Hardware Incompatibility on IVI Suspension Structures (V-String Assembly). The 120kN Clevis Ball supplied in the new BOM cannot connect to the existing 430mm Extension Link Plate. Field mitigation using bridging hardware infringed on safe live-line clearances. Formal escalation sent to LES.", "lookAhead": "Await LES response on IVI hardware. Adjust sequence to bypass IVI structures and continue with standard strain towers if weather permits.", "sNot": "Daily ORHVS Risk Assessment completed. Work halted early due to sustained high winds creating unacceptable risks for linemen on the tower and load handling.", "envNot": "Environmental Management Plan (EMP) strictly adhered to.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 2, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": [{"num": "IVI-Issue", "type": "515 IVI", "farm": "N/A", "gps": "N/A", "status": "Partial", "pL": true, "pC": false, "pR": true, "batch": "", "qa1": "pass", "qa2": "pass", "qa3": "pass", "qa4": "fail", "qa5": "pass", "notes": "Hardware mismatch on V-string. Clearances compromised. Awaiting LES resolution."}]}, "Tue, 28 Apr 2026": {"wthr": "Clear / Optimal", "isDelay": "Outage", "topic": "Security and Site Access Protocols", "envTemp": "21\u00b0C", "envHum": "55%", "envWind": "12 km/h", "outage": "Cancelled by Grid", "headcount": "12", "plant": "4X LDVs, 1X Truck", "regs": "LY38MLGP (Hilux), KT13XT (Hilux), LX69TTGP (Hilux), KF32VJGP (Karoo), HX03JFGP (Isuzu 300 Truck)", "defectScope": "N/A", "team": [true, true, true, true, false, true, true, true, true, true, true, true, true], "visitors": "None", "chrono": "07:00 - Arrival at staging area\n07:30 - Notification received of protest action at Camden\n08:00 - Outage officially cancelled by NTCSA for safety\n09:00 - Site secured, teams stood down\n10:00 - Departed staging area", "ncr": "No Non-Conformance Reports (NCR) issued today.", "ewn": "Outage cancellation due to community protest action at Camden Power Station. 1 full day of production lost.", "lookAhead": "Await clearance from Eskom/SAPS regarding protest action. Resume sequence once outage is re-granted.", "sNot": "Work halted prior to site entry due to safety risks associated with community unrest at the power station.", "envNot": "N/A - Site not accessed.", "ua": 0, "nm": 0, "fa": 0, "lti": 0, "i120": 0, "d120": 0, "i210": 0, "d210": 0, "isclv": 0, "dsclv": 0, "iboeye": 0, "dboeye": 0, "ibclv": 0, "dbclv": 0, "ishk": 0, "dshk": 0, "towers": []}};
+
+        // =========================================================================
+        // FIX 1: BULLETPROOF DATE FORMATTER (Bypasses browser locale differences)
+        // =========================================================================
+        function getSafeDate(dateObj) {
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            let d = days[dateObj.getDay()];
+            let dd = String(dateObj.getDate()).padStart(2, '0');
+            let m = months[dateObj.getMonth()];
+            let yyyy = dateObj.getFullYear();
+            return `${d}, ${dd} ${m} ${yyyy}`; // Guarantees exact "Tue, 07 Apr 2026" string match
+        }
+
+        // =========================================================================
+        // CALENDAR GENERATION LOOP
+        // =========================================================================
+        const dates = [];
+        let curDate = new Date(2026, 3, 7); 
+        let endDate = new Date(2026, 7, 31);
+        while(curDate <= endDate) {
+            if(curDate.getDay() !== 0) { 
+                dates.push(getSafeDate(curDate)); 
+            }
+            curDate.setDate(curDate.getDate() + 1);
+        }
+        const totalProjDays = dates.length;
+
+        let activeDate = dates[0];
+        let pData = {};
+        
+        try {
+            pData = JSON.parse(localStorage.getItem('camdenDataV33')) || {};
+        } catch(e) { pData = {}; }
+
+        // Merge Core Historical Data into memory
+        dates.forEach(d => {
+            if (historicalData[d] && !pData[d]) { 
+                pData[d] = JSON.parse(JSON.stringify(historicalData[d])); 
+            } 
+            else if (!pData[d]) {
+                pData[d] = {
+                    wthr: "Clear / Optimal / No Delay", isDelay: "No", topic: "", envTemp: "", envHum: "", envWind: "", outage: "Confirmed / Live",
+                    headcount: "", plant: defaultPlant, regs: defaultRegs, defectScope: "",
+                    team: Array(13).fill(false), visitors: "", chrono: defaultChrono,
+                    ncr: defaultNCR, ewn: defaultEWN, lookAhead: defaultLookAhead,
+                    towers: [], sNot: defaultSafety, envNot: defaultEnv, ua:0, nm:0, fa:0, lti:0,
+                    i120: 0, d120: 0, i210: 0, d210: 0, isclv: 0, dsclv: 0, iboeye: 0, dboeye: 0, ibclv: 0, dbclv: 0, ishk: 0, dshk: 0
+                };
+            }
+        });
+
+        Object.keys(pData).forEach(key => {
+            if(pData[key].towers) {
+                pData[key].towers.forEach(t => {
+                    if(!t.status) { t.status = 'Complete'; t.pL=true; t.pC=true; t.pR=true; }
+                    t.qa1 = sanitizeQA(t.qa1); t.qa2 = sanitizeQA(t.qa2); t.qa3 = sanitizeQA(t.qa3); t.qa4 = sanitizeQA(t.qa4); t.qa5 = sanitizeQA(t.qa5);
+                });
+            }
+        });
+
+        function init() {
+            let spanEl = document.getElementById('tot-days');
+            if(spanEl) spanEl.innerText = totalProjDays;
+
+            const tl = document.getElementById('timeline');
+            dates.forEach((date, i) => {
+                const card = document.createElement('div');
+                card.className = 'day-card' + (date === activeDate ? ' active' : '');
+                card.id = 'day-' + i;
+                card.innerText = date;
+                card.onclick = () => selectDay(date, i);
+                tl.appendChild(card);
+            });
+            loadDay();
+        }
+
+        function selectDay(date, i) {
+            document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('day-' + i).classList.add('active');
+            activeDate = date;
+            loadDay();
+        }
+
+        function getVal(id) { let el = document.getElementById(id); return el ? el.value : ""; }
+        function setVal(id, val) { let el = document.getElementById(id); if(el) el.value = val; }
+        function getNum(id) { let el = document.getElementById(id); return el ? (parseInt(el.value) || 0) : 0; }
+
+        function loadDay() {
+            const d = pData[activeDate];
+            if(!d) return;
+            setVal('weather', d.wthr); setVal('is-delay', d.isDelay); setVal('env-temp', d.envTemp); setVal('env-hum', d.envHum);
+            setVal('env-wind', d.envWind); setVal('site-headcount', d.headcount); setVal('outage-stat', d.outage); 
+            setVal('plant', d.plant); setVal('plant-regs', d.regs); setVal('defect-scope', d.defectScope);
+            setVal('toolbox', d.topic); setVal('visitors', d.visitors); setVal('chrono-log', d.chrono); 
+            setVal('ncr-log', d.ncr); setVal('ewn-log', d.ewn); setVal('look-ahead', d.lookAhead);
+            setVal('safety-notes', d.sNot); setVal('env-notes', d.envNot);
+            
+            setVal('hse-ua', d.ua||0); setVal('hse-nm', d.nm||0); setVal('hse-fa', d.fa||0); setVal('hse-lti', d.lti||0);
+
+            for(let i=0; i<13; i++) { let el = document.getElementById('tm-'+i); if(el) el.checked = d.team[i] || false; }
+            
+            setVal('i120', d.i120); setVal('d120', d.d120); setVal('i210', d.i210); setVal('d210', d.d210);
+            setVal('isclv', d.isclv); setVal('dsclv', d.dsclv); setVal('iboeye', d.iboeye); setVal('dboeye', d.dboeye);
+            setVal('ibclv', d.ibclv); setVal('dbclv', d.dbclv); setVal('ishk', d.ishk); setVal('dshk', d.dshk);
+            
+            renderTowers();
+            runCalculations();
+        }
+
+        function renderTowers() {
+            const container = document.getElementById('tower-container');
+            container.innerHTML = '';
+            if(!pData[activeDate].towers || pData[activeDate].towers.length === 0) {
+                container.innerHTML = '<div style="font-size:13px; font-weight:600; color:#94a3b8; padding: 20px; text-align:center; border: 2px dashed #cbd5e1; border-radius: 6px;">No towers logged for this date.</div>';
+                return;
+            }
+            pData[activeDate].towers.forEach((t, index) => {
+                let showPartial = t.status === 'Partial' ? 'flex' : 'none';
+                let isCrossRope = t.type.includes("Cross-Rope");
+                let check1Lbl = isCrossRope ? "1.7 Correct Hardware installed to type of structure" : "1.1 Pins in place after installation";
+                let check2Lbl = isCrossRope ? "1.8 Pins in place after installation" : "1.2 Visual inspection on insulator for damages and torns";
+                let check3Lbl = isCrossRope ? "1.9 Visual inspection on insulator for damages and torns" : "2. Hardware Torqued to Specification";
+                
+                function selectOption(val, target) { return val === target ? "selected" : ""; }
+
+                container.innerHTML += `
+                <div class="tower-entry">
+                    <div class="farm-warning" id="fw-${index}">RESTRICTION: No bush clearing. Talk to Owner.</div>
+                    <div class="form-group" style="margin:0;"><label>Tower No.</label><input type="text" value="${t.num}" oninput="updateTower(${index}, 'num', this.value)"></div>
+                    <div class="form-group" style="margin:0;"><label>Tower Type</label>
+                        <select onchange="updateTower(${index}, 'type', this.value); renderTowers();">
+                            <option value="515 C/D/E (Strain)" ${t.type === '515 C/D/E (Strain)' ? 'selected' : ''}>515 C/D/E (Strain)</option>
+                            <option value="524 HS (Suspension)" ${t.type === '524 HS (Suspension)' ? 'selected' : ''}>524 HS (Suspension)</option>
+                            <option value="515 IVI" ${t.type === '515 IVI' ? 'selected' : ''}>515 IVI</option>
+                            <option value="Cross-Rope" ${t.type === 'Cross-Rope' ? 'selected' : ''}>Cross-Rope</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;"><label>Completion</label>
+                        <select onchange="updateTower(${index}, 'status', this.value)">
+                            <option value="Complete" ${t.status === 'Complete' ? 'selected' : ''}>100% Complete</option>
+                            <option value="Partial" ${t.status === 'Partial' ? 'selected' : ''}>Partial (Phase)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;"><label>Farm Name</label><input type="text" value="${t.farm}" oninput="checkFarm(${index}, this.value); updateTower(${index}, 'farm', this.value)"></div>
+                    <div class="form-group" style="margin:0;"><label>GPS</label><input type="text" value="${t.gps || ''}" oninput="updateTower(${index}, 'gps', this.value)"></div>
+                    <button class="btn-delete" onclick="deleteTower(${index})">X</button>
+                    
+                    <div class="partial-phases" style="display:${showPartial};">
+                        <span>Check Completed Phases:</span>
+                        <label><input type="checkbox" ${t.pL ? 'checked' : ''} onchange="updateTower(${index}, 'pL', this.checked)"> Left</label>
+                        <label><input type="checkbox" ${t.pC ? 'checked' : ''} onchange="updateTower(${index}, 'pC', this.checked)"> Center</label>
+                        <label><input type="checkbox" ${t.pR ? 'checked' : ''} onchange="updateTower(${index}, 'pR', this.checked)"> Right</label>
+                    </div>
+
+                    <div class="qa-grid">
+                        <div class="qa-grid-title">DYNAMIC QITP CHECKLIST VERIFICATION</div>
+                        <div class="form-group" style="margin:0; grid-column: 1 / -1;"><input type="text" value="${t.batch}" placeholder="Insulator Batch / Traceability No." oninput="updateTower(${index}, 'batch', this.value)" style="border-color:#3b82f6; background:#eff6ff;"></div>
+                        
+                        <div class="qa-row"><label>${check1Lbl}</label><select onchange="updateTower(${index}, 'qa1', this.value)" style="color: ${t.qa1==='pass'?'#10b981':(t.qa1==='fail'?'#ef4444':'#64748b')}"><option value="" ${selectOption(t.qa1, '')}>- Select -</option><option value="pass" ${selectOption(t.qa1, 'pass')}>✅ Pass (Tick)</option><option value="fail" ${selectOption(t.qa1, 'fail')}>❌ Fail (X)</option></select></div>
+                        <div class="qa-row"><label>${check2Lbl}</label><select onchange="updateTower(${index}, 'qa2', this.value)" style="color: ${t.qa2==='pass'?'#10b981':(t.qa2==='fail'?'#ef4444':'#64748b')}"><option value="" ${selectOption(t.qa2, '')}>- Select -</option><option value="pass" ${selectOption(t.qa2, 'pass')}>✅ Pass (Tick)</option><option value="fail" ${selectOption(t.qa2, 'fail')}>❌ Fail (X)</option></select></div>
+                        <div class="qa-row"><label>${check3Lbl}</label><select onchange="updateTower(${index}, 'qa3', this.value)" style="color: ${t.qa3==='pass'?'#10b981':(t.qa3==='fail'?'#ef4444':'#64748b')}"><option value="" ${selectOption(t.qa3, '')}>- Select -</option><option value="pass" ${selectOption(t.qa3, 'pass')}>✅ Pass (Tick)</option><option value="fail" ${selectOption(t.qa3, 'fail')}>❌ Fail (X)</option></select></div>
+                        
+                        <div class="qa-row" style="display: ${isCrossRope ? 'none' : 'flex'}"><label>Min 3.2m Clearance</label><select onchange="updateTower(${index}, 'qa4', this.value)" style="color: ${t.qa4==='pass'?'#10b981':(t.qa4==='fail'?'#ef4444':'#64748b')}"><option value="" ${selectOption(t.qa4, '')}>- Select -</option><option value="pass" ${selectOption(t.qa4, 'pass')}>✅ Pass (Tick)</option><option value="fail" ${selectOption(t.qa4, 'fail')}>❌ Fail (X)</option></select></div>
+                        <div class="qa-row" style="display: ${isCrossRope ? 'none' : 'flex'}"><label>Conductor Stranding Checked</label><select onchange="updateTower(${index}, 'qa5', this.value)" style="color: ${t.qa5==='pass'?'#10b981':(t.qa5==='fail'?'#ef4444':'#64748b')}"><option value="" ${selectOption(t.qa5, '')}>- Select -</option><option value="pass" ${selectOption(t.qa5, 'pass')}>✅ Pass (Tick)</option><option value="fail" ${selectOption(t.qa5, 'fail')}>❌ Fail (X)</option></select></div>
+                    </div>
+                </div>`;
+                setTimeout(() => checkFarm(index, t.farm), 50);
+            });
+        }
+
+        function checkFarm(index, val) {
+            let el = document.getElementById('fw-'+index);
+            if(!el) return;
+            let v = val.toLowerCase();
+            if(v.includes('geldenhuys') || v.includes('fried') || v.includes('louw')) { el.style.display = 'block'; } 
+            else { el.style.display = 'none'; }
+        }
+
+        function addTower() { 
+            if(!pData[activeDate].towers) pData[activeDate].towers = [];
+            pData[activeDate].towers.push({ num: '', type: '515 C/D/E (Strain)', farm: '', gps: '', status: 'Complete', pL:true, pC:true, pR:true, batch: '', qa1: '', qa2: '', qa3: '', qa4: '', qa5: '', notes: "" });
+            renderTowers(); autoSave(); 
+        }
+        function updateTower(index, field, value) { 
+            pData[activeDate].towers[index][field] = value; 
+            if(field==='status' || field ==='type' || field.startsWith('qa')) renderTowers(); 
+            autoSave(); 
+        }
+        function deleteTower(index) { if(confirm("Remove this tower?")) { pData[activeDate].towers.splice(index, 1); renderTowers(); autoSave(); } }
+
+        function autoSave() {
+            const d = pData[activeDate];
+            if(!d) return;
+            d.wthr = getVal('weather'); d.isDelay = getVal('is-delay'); d.envTemp = getVal('env-temp'); d.envHum = getVal('env-hum');
+            d.envWind = getVal('env-wind'); d.headcount = getVal('site-headcount'); d.outage = getVal('outage-stat'); 
+            d.plant = getVal('plant'); d.regs = getVal('plant-regs'); d.defectScope = getVal('defect-scope');
+            d.topic = getVal('toolbox'); d.visitors = getVal('visitors'); d.chrono = getVal('chrono-log');
+            d.ncr = getVal('ncr-log'); d.ewn = getVal('ewn-log'); d.lookAhead = getVal('look-ahead');
+            d.sNot = getVal('safety-notes'); d.envNot = getVal('env-notes');
+            
+            d.ua = getNum('hse-ua'); d.nm = getNum('hse-nm'); d.fa = getNum('hse-fa'); d.lti = getNum('hse-lti');
+
+            for(let i=0; i<13; i++) { let el = document.getElementById('tm-'+i); if(el) d.team[i] = el.checked; }
+            
+            d.i120 = getNum('i120'); d.d120 = getNum('d120'); d.i210 = getNum('i210'); d.d210 = getNum('d210');
+            d.isclv = getNum('isclv'); d.dsclv = getNum('dsclv'); d.iboeye = getNum('iboeye'); d.dboeye = getNum('dboeye');
+            d.ibclv = getNum('ibclv'); d.dbclv = getNum('dbclv'); d.ishk = getNum('ishk'); d.dshk = getNum('dshk');
+
+            try {
+                localStorage.setItem('camdenDataV33', JSON.stringify(pData));
+                let ind = document.getElementById('save-indicator');
+                if(ind) { ind.style.color = "#10b981"; ind.innerText = "Saved Locally."; setTimeout(() => { ind.innerText = "Auto-Saving..."; }, 1000); }
+            } catch(e) {}
+            
+            runCalculations();
+        }
+
+        function getInsulatorCount(tower) {
+            let mult = 0;
+            if(tower.status === 'Complete') { mult = 1; } 
+            else { let p = 0; if(tower.pL) p++; if(tower.pC) p++; if(tower.pR) p++; mult = p / 3; }
+            if(tower.type.includes("Strain")) return 12 * mult;
+            if(tower.type.includes("IVI")) return 4 * mult;
+            return 3 * mult;
+        }
+
+        // =========================================================================
+        // FIX 2 & 3: NATIVE SVG GRAPH GENERATORS (100% OFFLINE)
+        // =========================================================================
+        function drawGraphs(curDayIndex) {
+            let towerData = []; let insData = []; let labels = [];
+            let maxTow = 0; let maxIns = 0;
+
+            // Extract data from day 1 up to selected day
+            for (let i = 0; i < curDayIndex; i++) {
+                let dt = dates[i]; let d = pData[dt];
+                labels.push(dt);
+                if (!d) { towerData.push(0); insData.push(0); continue; }
+                
+                let dayTow = 0; let dayIns = 0;
+                if(d.towers) {
+                    d.towers.forEach(t => {
+                        dayTow += (t.status === 'Complete' ? 1 : 0.66);
+                        dayIns += getInsulatorCount(t);
+                    });
+                }
+                towerData.push(dayTow); insData.push(dayIns);
+                if (dayTow > maxTow) maxTow = dayTow;
+                if (dayIns > maxIns) maxIns = dayIns;
+            }
+
+            maxTow = Math.max(maxTow, 5); // Fallback scale
+            maxIns = Math.max(maxIns, 30); // Fallback scale
+
+            document.getElementById('graph-towers').innerHTML = generateBarChart(labels, towerData, maxTow, '#3b82f6');
+            document.getElementById('graph-insulators').innerHTML = generateAreaChart(labels, insData, maxIns, '#10b981');
+        }
+
+        function generateBarChart(labels, data, maxVal, color) {
+            let svg = `<svg viewBox="0 0 800 300" style="width:100%; height:100%; font-family:sans-serif;">`;
+            let padLeft = 40, padBtm = 80, padTop = 20, padRight = 20;
+            let w = 800 - padLeft - padRight; let h = 300 - padTop - padBtm;
+            
+            // Grid lines
+            for(let i=0; i<=5; i++) {
+                let y = padTop + h - (i/5)*h; let val = ((i/5)*maxVal).toFixed(1);
+                svg += `<line x1="${padLeft}" y1="${y}" x2="${padLeft+w}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+                svg += `<text x="${padLeft-10}" y="${y+4}" font-size="12" fill="#64748b" text-anchor="end">${val}</text>`;
+            }
+
+            let barW = (w / data.length) * 0.6;
+            let spacing = w / data.length;
+            for(let i=0; i<data.length; i++) {
+                let barH = (data[i] / maxVal) * h;
+                let x = padLeft + (i * spacing) + (spacing/2) - (barW/2);
+                let y = padTop + h - barH;
+                if(barH > 0) {
+                    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${color}" rx="2" class="graph-interactive"><title>${labels[i]}: ${data[i].toFixed(1)} Towers</title></rect>`;
+                }
+                let lblX = padLeft + (i * spacing) + (spacing/2); let lblY = padTop + h + 15;
+                svg += `<text x="${lblX}" y="${lblY}" font-size="10" fill="#64748b" transform="rotate(-45 ${lblX} ${lblY})" text-anchor="end">${labels[i]}</text>`;
+            }
+            svg += `</svg>`; return svg;
+        }
+
+        function generateAreaChart(labels, data, maxVal, color) {
+            let svg = `<svg viewBox="0 0 800 300" style="width:100%; height:100%; font-family:sans-serif;">`;
+            let padLeft = 40, padBtm = 80, padTop = 20, padRight = 20;
+            let w = 800 - padLeft - padRight; let h = 300 - padTop - padBtm;
+            
+            // Grid lines
+            for(let i=0; i<=5; i++) {
+                let y = padTop + h - (i/5)*h; let val = Math.round((i/5)*maxVal);
+                svg += `<line x1="${padLeft}" y1="${y}" x2="${padLeft+w}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+                svg += `<text x="${padLeft-10}" y="${y+4}" font-size="12" fill="#64748b" text-anchor="end">${val}</text>`;
+            }
+
+            let spacing = data.length > 1 ? (w / (data.length - 1)) : w;
+            let pathD = `M ${padLeft} ${padTop + h} `;
+            let lineD = `M `; let pts = [];
+            
+            for(let i=0; i<data.length; i++) {
+                let ptH = (data[i] / maxVal) * h;
+                let x = padLeft + (i * spacing); let y = padTop + h - ptH;
+                pts.push({x, y});
+                if(i===0) lineD += `${x} ${y} `; else lineD += `L ${x} ${y} `;
+                pathD += `L ${x} ${y} `;
+                
+                let lblX = padLeft + (i * spacing); let lblY = padTop + h + 15;
+                svg += `<text x="${lblX}" y="${lblY}" font-size="10" fill="#64748b" transform="rotate(-45 ${lblX} ${lblY})" text-anchor="end">${labels[i]}</text>`;
+            }
+            pathD += `L ${padLeft + (data.length>1 ? w : 0)} ${padTop + h} Z`;
+            
+            svg += `<path d="${pathD}" fill="${color}" fill-opacity="0.15" />`;
+            svg += `<path d="${lineD}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round"/>`;
+            
+            for(let i=0; i<pts.length; i++) {
+                svg += `<circle cx="${pts[i].x}" cy="${pts[i].y}" r="4" fill="#ffffff" stroke="${color}" stroke-width="2" class="graph-interactive"><title>${labels[i]}: ${Math.round(data[i])} Insulators</title></circle>`;
+            }
+            svg += `</svg>`; return svg;
+        }
+
+        function runCalculations() {
+            let cumTowers = 0; let totInsCalc = 0; let curDayIndex = dates.indexOf(activeDate) + 1;
+            let u120=0, u210=0, usclv=0, uboeye=0, ubclv=0, ushk=0; let delayDays = 0; let workedDays = 0; let clientDelays = 0;
+            
+            for (let i = 0; i < curDayIndex; i++) {
+                let dt = dates[i]; let d = pData[dt]; if(!d) continue;
+                
+                let dayTowers = 0;
+                if(d.towers) {
+                    d.towers.forEach(t => {
+                        if(t.status === 'Complete') { cumTowers += 1; dayTowers += 1; }
+                        else { let p = 0; if(t.pL) p+=0.333; if(t.pC) p+=0.333; if(t.pR) p+=0.333; cumTowers += p; dayTowers += p; }
+                        totInsCalc += getInsulatorCount(t);
+                    });
+                }
+                
+                u120 += (d.i120 + d.d120); u210 += (d.i210 + d.d210); usclv += (d.isclv + d.dsclv); 
+                uboeye += (d.iboeye + d.dboeye); ubclv += (d.ibclv + d.dbclv); ushk += (d.ishk + d.dshk);
+                
+                if(d.isDelay !== "No") { 
+                    delayDays++; 
+                    if(d.isDelay === "Outage" || d.isDelay === "Access") clientDelays++;
+                } else { workedDays++; }
+            }
+
+            // Draw Dynamic Graphs
+            drawGraphs(curDayIndex);
+
+            let totInsMaster = masterInv.i120 + masterInv.i210;
+            let prodPctRaw = (cumTowers / totalProjTowers) * 100;
+            let prodPct = Math.min(100, prodPctRaw);
+            document.getElementById('val-prod-tow-pct').innerText = cumTowers === 0 ? "0%" : prodPct.toFixed(1) + "%";
+            document.getElementById('donut-prod-tow').style.background = `conic-gradient(#3b82f6 0% ${prodPct}%, #e2e8f0 ${prodPct}% 100%)`;
+
+            let insPctRaw = (totInsCalc / totInsMaster) * 100;
+            let insPct = Math.min(100, insPctRaw);
+            document.getElementById('val-prod-ins-pct').innerText = totInsCalc === 0 ? "0%" : insPct.toFixed(1) + "%";
+            document.getElementById('donut-prod-ins').style.background = `conic-gradient(#10b981 0% ${insPct}%, #e2e8f0 ${insPct}% 100%)`;
+            
+            document.getElementById('tot-tow-done').innerText = cumTowers.toFixed(1);
+            document.getElementById('tot-tow-rem').innerText = (totalProjTowers - cumTowers).toFixed(1);
+            document.getElementById('tot-ins-done').innerText = Math.round(totInsCalc);
+            document.getElementById('tot-ins-rem').innerText = Math.round(totInsMaster - totInsCalc);
+
+            let todayTowers = 0; let todayIns = 0;
+            if(pData[activeDate] && pData[activeDate].towers) {
+                pData[activeDate].towers.forEach(t => {
+                    if(t.status === 'Complete') todayTowers += 1; else todayTowers += 0.66;
+                    todayIns += getInsulatorCount(t);
+                });
+            }
+            document.getElementById('dash-towers-today').innerText = todayTowers.toFixed(1);
+            document.getElementById('dash-ins-today').innerText = Math.round(todayIns);
+
+            let expected = Math.round(curDayIndex * targetRate);
+            let statEl = document.getElementById('info-status');
+            if(cumTowers >= expected) { 
+                statEl.innerText = "ON SCHEDULE (+" + (cumTowers - expected).toFixed(1) + ")"; statEl.style.color = "#10b981";
+            } else { 
+                statEl.innerText = "BEHIND SCHEDULE (" + (cumTowers - expected).toFixed(1) + ")"; statEl.style.color = "#ef4444"; 
+            }
+
+            let safeWorkedDays = Math.max(1, workedDays);
+            let spi = expected === 0 ? 1.0 : (cumTowers / expected).toFixed(2);
+            document.getElementById('spi-val').innerText = spi;
+            document.getElementById('spi-val').style.color = spi >= 1 ? "#10b981" : "#ef4444";
+            
+            let dailyAvgGood = (cumTowers / safeWorkedDays);
+            let safeTotalDays = Math.max(1, curDayIndex);
+            let dailyAvgBad = (cumTowers / safeTotalDays);
+            
+            let remTowers = totalProjTowers - cumTowers;
+            let badDate = new Date(); badDate.setDate(badDate.getDate() + (remTowers / Math.max(0.1, dailyAvgBad)));
+            let goodDate = new Date(); goodDate.setDate(goodDate.getDate() + (remTowers / Math.max(0.1, dailyAvgGood)));
+            
+            document.getElementById('est-comp-bad').innerText = badDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            document.getElementById('est-comp-good').innerText = goodDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            let workPct = (workedDays / totalProjDays) * 100;
+            let delPct = (delayDays / totalProjDays) * 100;
+            document.getElementById('sb-work').style.width = workPct + "%"; document.getElementById('sb-work').innerText = workedDays > 0 ? workedDays + "d" : "";
+            document.getElementById('sb-del').style.width = delPct + "%"; document.getElementById('sb-del').innerText = delayDays > 0 ? delayDays + "d" : "";
+            document.getElementById('info-client-delays').innerText = clientDelays + " Days";
+
+            function updateInvBar(idLbl, idFill, used, master) {
+                document.getElementById(idLbl).innerText = used + "/" + master;
+                let pct = Math.min(100, Math.round((used/master)*100)); document.getElementById(idFill).style.width = pct + "%";
+            }
+            updateInvBar('lbl-bar-120', 'bar-fill-120', u120, masterInv.i120);
+            updateInvBar('lbl-bar-210', 'bar-fill-210', u210, masterInv.i210);
+            updateInvBar('lbl-bar-sclv', 'bar-fill-sclv', usclv, masterInv.sclv);
+            updateInvBar('lbl-bar-boeye', 'bar-fill-boeye', uboeye, masterInv.boeye);
+            updateInvBar('lbl-bar-bclv', 'bar-fill-bclv', ubclv, masterInv.bclv);
+            updateInvBar('lbl-bar-shk', 'bar-fill-shk', ushk, masterInv.shk);
+        }
+
+        // =========================================================================
+        // DYNAMIC HTML QITP GENERATOR
+        // =========================================================================
+        function generateQITP(t, dt) {
+            let isStrain = t.type.includes("Strain");
+            let isCrossRope = t.type.includes("Cross-Rope");
+            let titleText = isStrain ? "Hardware Installation including Insulators (Strain)" : "Hardware Installation including Insulators (Suspension)";
+            let insQty = Math.round(getInsulatorCount(t));
+            
+            let fSigIcon = freddySigBase64.length > 10 ? `<img src="${freddySigBase64}" height="14" style="display:block; margin:auto;">` : ``;
+            let tSigIcon = thabisoSigBase64.length > 10 ? `<img src="${thabisoSigBase64}" height="14" style="display:block; margin:auto;">` : ``;
+            let fSigBig = freddySigBase64.length > 10 ? `<img src="${freddySigBase64}" height="28" style="display:block; margin:auto;">` : ``;
+            let tSigBig = thabisoSigBase64.length > 10 ? `<img src="${thabisoSigBase64}" height="28" style="display:block; margin:auto;">` : ``;
+
+            function getMark(val) {
+                if(val === 'pass') return '✓';
+                if(val === 'fail') return '<span style="color:red;">X</span>';
+                return ''; 
+            }
+
+            let mark1 = getMark(t.qa1); let mark2 = getMark(t.qa2); let mark3 = getMark(t.qa3); let mark4 = getMark(t.qa4); let mark5 = getMark(t.qa5);
+            let rowsHtml = "";
+            
+            if(isCrossRope) {
+                rowsHtml = `
+                    <tr><td class="b">1</td><td class="b l">Hardware</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td></tr>
+                    <tr><td class="b">1.7</td><td class="b l">Correct Hardware installed to type of structure</td><td class="b">Drawing</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">1.8</td><td class="b l">Pins in place after installation</td><td class="b">Drawing</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">1.9</td><td class="b l">Visual inspection on insulator for damages and torns</td><td class="b">QCS</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark3}</td><td class="b"></td><td class="b">${mark3}</td><td class="b"></td><td class="b">${mark3}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2</td><td class="b l">Tower Type</td><td colspan="22" class="b l">All 1st off each type that requires an inspection notification (Hold Point), must be witnessed and signed by the responsible Client Engineer</td></tr>
+                    <tr><td class="b">2.1</td><td class="b l">Tower Numbers</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2.2</td><td class="b l">Type of hardware suspension structure</td><td class="b">Design</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">3</td><td class="b l">Handing Over</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td></tr>
+                    <tr><td class="b">3.1</td><td class="b l">Hand over document</td><td class="b">Handing over Package</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                `;
+            } else if(isStrain) {
+                rowsHtml = `
+                    <tr><td class="b">1</td><td class="b l">Hardware</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td></tr>
+                    <tr><td class="b">1.1</td><td class="b l">Pins in place after installation</td><td class="b">Drawing</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">1.2</td><td class="b l">Visual inspection on insulator for damages and torns</td><td class="b">QCS</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2</td><td class="b l">Tower Type: Strain Tower</td><td colspan="22" class="b l">All 1st off each type that requires an inspection notification (Hold Point), must be witnessed and signed by the responsible Client Engineer</td></tr>
+                    <tr><td class="b">2.1</td><td class="b l">Tower Numbers</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2.2</td><td class="b l">Insulator per structure Quantity: <b style="color:red;">${insQty}</b></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2.3</td><td class="b l">Type of insulator strain structure</td><td class="b">Design</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">3</td><td class="b l">Handing Over</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td></tr>
+                    <tr><td class="b">3.1</td><td class="b l">Hand over document</td><td class="b">Handing over Package</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                `;
+            } else {
+                rowsHtml = `
+                    <tr><td class="b">1</td><td class="b l">Hardware</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td></tr>
+                    <tr><td class="b">1.7</td><td class="b l">Correct Hardware installed to type of structure</td><td class="b">Drawing</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b">${mark1}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">1.8</td><td class="b l">Pins in place after installation</td><td class="b">Drawing</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b">${mark2}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">1.9</td><td class="b l">Visual inspection on insulator for damages and torns</td><td class="b">QCS</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${mark3}</td><td class="b"></td><td class="b">${mark3}</td><td class="b"></td><td class="b">${mark3}</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2</td><td class="b l">Tower Type</td><td colspan="22" class="b l">All 1st off each type that requires an inspection notification (Hold Point), must be witnessed and signed by the responsible Client Engineer</td></tr>
+                    <tr><td class="b">2.1</td><td class="b l">Tower Numbers</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2.2</td><td class="b l">Insulator & hardware per structure Quantity: <b style="color:red;">${insQty}</b></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">2.3</td><td class="b l">Type of hardware for suspension structure</td><td class="b">Design</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b">I</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                    <tr><td class="b">3</td><td class="b l">Handing Over</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td></tr>
+                    <tr><td class="b">3.1</td><td class="b l">Hand over document</td><td class="b">Handing over Package</td><td class="b"></td><td class="b"></td><td class="b">H</td><td class="b">H</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b">X</td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b"></td><td class="b">${fSigIcon}</td><td class="b">${tSigIcon}</td><td class="b"></td><td class="b">${dt}</td><td class="b"></td></tr>
+                `;
+            }
+
+            return `
+            <br clear="all" style="mso-special-character:line-break; page-break-before:always" />
+            <div class="Section2">
+                <table class="q-table" style="table-layout:fixed; width:100%;">
+                    <colgroup>
+                        <col style="width:3%;"><col style="width:12%;"><col style="width:10%;"><col style="width:3%;"><col style="width:18%;">
+                        <col style="width:2%;"><col style="width:2%;"><col style="width:2%;"><col style="width:2%;"><col style="width:2%;">
+                        <col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;"><col style="width:4%;">
+                        <col style="width:3%;"><col style="width:3%;"><col style="width:3%;">
+                        <col style="width:3%;"><col style="width:3%;"><col style="width:3%;">
+                        <col style="width:4%;"><col style="width:4%;">
+                    </colgroup>
+                    <tr><td colspan="3" class="l"><b>Doc number:</b> 010-MIC/SHEQMS/QA034</td><td colspan="15" class="l"><b>MICO Construction (Pty) Ltd</b></td><td colspan="6"></td></tr>
+                    <tr><td colspan="3" class="l"><b>Rev:</b> 2</td><td colspan="15" class="l"><b>Inspection Test Plan (ITP) - ${titleText}</b></td><td colspan="6"></td></tr>
+                    <tr><td colspan="3" class="l"><b>Page:</b> 1 of 1</td><td colspan="21"></td></tr>
+                    <tr><td colspan="3" class="l"><b>Effective Date:</b> 27/2/2026</td><td colspan="21"></td></tr>
+                    <tr><td colspan="3" class="l"><b>CONTRACTOR:</b> Mico Construction</td><td colspan="9" class="l"><b>LOCATION:</b> CAMDEN TO EDWALENI TO MAPUTO BORDER 400kV INSULATOR REPLACEMENT</td><td colspan="12"></td></tr>
+                    <tr><td colspan="3" class="l"><b>CLIENT:</b> Motraco / Eskom</td><td colspan="6" class="l">1. Contractor | I = INSPECTION</td><td colspan="3" class="l"><b>Tower Number:</b> <span style="color:red;">${t.num || ''}</span></td><td colspan="12"></td></tr>
+                    <tr><td colspan="3" class="l"><b>CLIENT ORDER No:</b> </td><td colspan="6" class="l">2. Client | R = REVIEW</td><td colspan="3" class="l"><b>Tower Type:</b> <span style="color:red;">${t.type || ''}</span></td><td colspan="12"></td></tr>
+                    <tr><td colspan="3" class="l"><b>CONTRACT TITLE:</b> CAMDEN TO EDWALENI TO MAPUTO BORDER</td><td colspan="6" class="l">3. EO | S = SURVEILLANCE</td><td colspan="3" class="l"><b>INSPECTION RESULTS</b></td><td colspan="12"></td></tr>
+                    <tr><td colspan="3"></td><td colspan="6" class="l">4. Client Engineer | W = WITNESS POINT</td><td colspan="15"></td></tr>
+                    <tr><td colspan="3"></td><td colspan="6" class="l">5. Other | H = HOLD POINT</td><td colspan="15"></td></tr>
+                    
+                    <tr>
+                        <td rowspan="2" class="b dark">OP No</td><td rowspan="2" class="b dark">PROCESS / ACTIVITY</td><td rowspan="2" class="b dark">PROCEDURE / FORM</td><td rowspan="2" class="b dark">REV</td><td rowspan="2" class="b dark">ACTIVITY / CONTROL</td>
+                        <td colspan="5" class="b dark">INSP/REV/SURV/WIT/HOLD BY</td><td colspan="6" class="b dark">TYPE OF CONTROL REQUIRED</td><td colspan="3" class="b dark">INSPECTION RESULTS</td><td colspan="3" class="b dark">SIGNATURE</td><td rowspan="2" class="b dark">Date</td><td rowspan="2" class="b dark">Remarks</td>
+                    </tr>
+                    <tr>
+                        <td class="b dark">1</td><td class="b dark">2</td><td class="b dark">3</td><td class="b dark">4</td><td class="b dark">5</td>
+                        <td class="b dark">DESTRUCT</td><td class="b dark">NON-DESTRUCT</td><td class="b dark">DIMENSIONAL</td><td class="b dark">VISUAL</td><td class="b dark">CERTIFICATE</td><td class="b dark">REPORT</td>
+                        <td class="b dark">APPROVE</td><td class="b dark">ACCEPT</td><td class="b dark">REJECT</td>
+                        <td class="b dark">Contractor</td><td class="b dark">Client Rep</td><td class="b dark">Client Eng</td>
+                    </tr>
+                    ${rowsHtml}
+                    
+                    <tr>
+                        <td colspan="10" class="b l dark">Released by Mico Construction</td>
+                        <td colspan="8" class="b l dark">Accepted by Client</td>
+                        <td colspan="6" rowspan="10" class="b l" style="vertical-align: top; font-size: 6pt;">
+                            <b>Definitions:</b><br><br>
+                            <b>H - Hold Point:</b> A predetermined stage beyond which work shall not proceed without the attendance/go-ahead of the client...<br>
+                            <b>I - Inspection Point</b><br>
+                            <b>S - Surveillance</b><br>
+                            <b>R - Review</b><br>
+                            <b>W - Witness</b>
+                        </td>
+                    </tr>
+                    <tr><td colspan="2" class="b l">Signature</td><td colspan="8" class="b">${fSigBig}</td><td colspan="2" class="b l">Signature</td><td colspan="6" class="b"></td></tr>
+                    <tr><td colspan="2" class="b l">Name</td><td colspan="8" class="b">Freddy Lategaan</td><td colspan="2" class="b l">Name</td><td colspan="6" class="b">Nishanth Parus</td></tr>
+                    <tr><td colspan="2" class="b l">Designation</td><td colspan="8" class="b">PIC</td><td colspan="2" class="b l">Designation</td><td colspan="6" class="b">Rhythm</td></tr>
+                    <tr><td colspan="2" class="b l">Date</td><td colspan="8" class="b">${dt}</td><td colspan="2" class="b l">Date</td><td colspan="6" class="b">${dt}</td></tr>
+                    
+                    <tr><td colspan="10" class="b l dark">Client QA</td><td colspan="8" class="b l dark">Client Technical</td></tr>
+                    <tr><td colspan="2" class="b l">Signature</td><td colspan="8" class="b">${tSigBig}</td><td colspan="2" class="b l">Signature</td><td colspan="6" class="b"></td></tr>
+                    <tr><td colspan="2" class="b l">Name</td><td colspan="8" class="b">Thabiso Mahlangu</td><td colspan="2" class="b l">Name</td><td colspan="6" class="b"></td></tr>
+                    <tr><td colspan="2" class="b l">Designation</td><td colspan="8" class="b">AE / Site Supervisor</td><td colspan="2" class="b l">Designation</td><td colspan="6" class="b"></td></tr>
+                    <tr><td colspan="2" class="b l">Date</td><td colspan="8" class="b">${dt}</td><td colspan="2" class="b l">Date</td><td colspan="6" class="b">${dt}</td></tr>
+                </table>
+            </div>`;
+        }
+
+        // =========================================================================
+        // EXPORT ENGINE
+        // =========================================================================
+        function exportWordDoc(isWeekly) {
+            try { autoSave(); } catch(e) { }
+            
+            let exportDates = []; let reportTitle = ""; let filePrefix = "";
+            if (isWeekly) {
+                let currentIndex = dates.indexOf(activeDate); let currentDayStr = activeDate.substring(0, 3); let backTrack = 0;
+                if(currentDayStr === "Tue") backTrack = 1; if(currentDayStr === "Wed") backTrack = 2; if(currentDayStr === "Thu") backTrack = 3;
+                if(currentDayStr === "Fri") backTrack = 4; if(currentDayStr === "Sat") backTrack = 5; if(currentDayStr === "Sun") backTrack = 6;
+                let startIndex = Math.max(0, currentIndex - backTrack);
+                for(let i=0; i<6; i++) { if(dates[startIndex + i] && pData[dates[startIndex + i]]) { exportDates.push(dates[startIndex + i]); } }
+                reportTitle = `WEEKLY CONSOLIDATED SITE REPORT & CLAIMS REGISTER`; filePrefix = "Weekly_Report";
+            } else {
+                if(pData[activeDate]) exportDates.push(activeDate); reportTitle = `DAILY ENGINEERING SITE REPORT`; filePrefix = "Daily_Report";
+            }
+
+            if(exportDates.length === 0) return alert("No data available to export.");
+
+            let tTotal = 0, u120 = 0, u210 = 0, usclv = 0, uboeye = 0, ubclv = 0, ushk = 0;
+            let combinedSafety = "", combinedEnv = "", combinedChrono = "", combinedNCR = "", combinedEWN = "", combinedLookAhead = "", allTowers = [], standingTimeHtml = "";
+            let tUA=0, tNM=0, tFA=0, tLTI=0;
+            let dActive = pData[activeDate] || {};
+            let attendanceOutput = "";
+            let teamPresent = [];
+            
+            if(dActive && dActive.team) {
+                for(let i=0; i<13; i++) { if(dActive.team[i]) teamPresent.push(coreTeamNames[i]); }
+                attendanceOutput += "<b>Core Team & Authorised Staff (Active Day):</b><br>" + (teamPresent.length > 0 ? teamPresent.join("<br>") : "None") + "<br><br>";
+                attendanceOutput += "<b>External Visitors / Deliveries:</b><br>" + (dActive.visitors ? String(dActive.visitors).replace(/\n/g, '<br>') : "None");
+            }
+
+            exportDates.forEach(dt => {
+                let d = pData[dt]; if(!d) return;
+                
+                let dTow = 0;
+                if(d.towers) { d.towers.forEach(t => { 
+                    dTow += (t.status === 'Complete' ? 1 : 0.66);
+                    allTowers.push({ date: dt, num: t.num, type: t.type, farm: t.farm, gps: t.gps, batch: t.batch, qa1: t.qa1, qa2: t.qa2, qa3: t.qa3, qa4: t.qa4, qa5: t.qa5, notes: t.notes, status: t.status, pL: t.pL, pC: t.pC, pR: t.pR }); 
+                });}
+                tTotal += dTow;
+                
+                u120 += (Number(d.i120)||0) + (Number(d.d120)||0); u210 += (Number(d.i210)||0) + (Number(d.d210)||0);
+                usclv += (Number(d.isclv)||0) + (Number(d.dsclv)||0); uboeye += (Number(d.iboeye)||0) + (Number(d.dboeye)||0);
+                ubclv += (Number(d.ibclv)||0) + (Number(d.dbclv)||0); ushk += (Number(d.ishk)||0) + (Number(d.dshk)||0);
+                
+                tUA += Number(d.ua)||0; tNM += Number(d.nm)||0; tFA += Number(d.fa)||0; tLTI += Number(d.lti)||0;
+
+                if(d.chrono) combinedChrono += `<b>[${dt}]</b><br>${String(d.chrono).replace(/\n/g, '<br>')}<br><br>`;
+                if(d.sNot) combinedSafety += `<b>[${dt}]</b> ${d.sNot}<br><br>`;
+                if(d.envNot) combinedEnv += `<b>[${dt}]</b> ${d.envNot}<br><br>`;
+                if(d.ncr) combinedNCR += `<b>[${dt}]</b> ${d.ncr}<br><br>`;
+                if(d.ewn) combinedEWN += `<b>[${dt}]</b> ${String(d.ewn).replace(/\n/g, '<br>')}<br><br>`;
+                if(d.lookAhead) combinedLookAhead += `<b>[${dt}]</b> ${d.lookAhead}<br><br>`;
+                
+                if(isWeekly && d.isDelay !== "No") {
+                    standingTimeHtml += `<tr><td>${dt}</td><td>${dTow.toFixed(1)}</td><td style="color:red; font-weight:bold;">${d.isDelay}</td><td>${d.outage}</td><td>${d.wthr}</td></tr>`;
+                }
+            });
+
+            let grandTotalTowers = 0, grandU120 = 0, grandU210 = 0, grandUsclv = 0, grandUboeye = 0, grandUbclv = 0, grandUshk = 0;
+            let lastExportDate = exportDates[exportDates.length - 1];
+            let cutoffIndex = dates.indexOf(lastExportDate);
+
+            for (let i = 0; i <= cutoffIndex; i++) {
+                let dt = dates[i]; let pd = pData[dt]; if(!pd) continue;
+                if(pd.towers) { pd.towers.forEach(t => { grandTotalTowers += (t.status === 'Complete' ? 1 : 0.66); }); }
+                grandU120 += (Number(pd.i120)||0) + (Number(pd.d120)||0); grandU210 += (Number(pd.i210)||0) + (Number(pd.d210)||0);
+                grandUsclv += (Number(pd.isclv)||0) + (Number(pd.dsclv)||0); grandUboeye += (Number(pd.iboeye)||0) + (Number(pd.dboeye)||0);
+                grandUbclv += (Number(pd.ibclv)||0) + (Number(pd.dbclv)||0); grandUshk += (Number(pd.ishk)||0) + (Number(pd.dshk)||0);
+            }
+
+            let pctCompleteRaw = (grandTotalTowers / totalProjTowers) * 100;
+            let pctComplete = grandTotalTowers === 0 ? "0" : (pctCompleteRaw % 1 === 0 ? pctCompleteRaw : pctCompleteRaw.toFixed(2));
+
+            let qitpPagesHtml = "";
+            let photoPagesHtml = "";
+            allTowers.forEach(t => { 
+                let tName = t.num ? t.num : "Un-numbered Tower";
+                
+                if(isWeekly) {
+                    photoPagesHtml += `
+                    <h3>Photographic Verification: Tower ${tName}</h3>
+                    <table class="photo-table" style="text-align: center;">
+                        <tr><th style="background:#e2e8f0;">Full Tower Profile (Completed Structure)</th></tr>
+                        <tr><td><div class="img-box" style="padding: 100px 10px;">[ PASTE IMAGE: Tower ${tName} Full Profile ]</div></td></tr>
+                    </table><br>`;
+                } else {
+                    photoPagesHtml += `
+                    <h3>Photographic Verification: Tower ${tName}</h3>
+                    <table class="photo-table" style="text-align: center;">
+                        <tr><th colspan="3" style="background:#e2e8f0;">Tower Base Identification</th></tr>
+                        <tr><td colspan="3"><div class="img-box" style="padding: 60px 10px;">[ PASTE 1: Tower Base & Number Plate ]</div></td></tr>
+                        <tr><th colspan="3" style="background:#e2e8f0; margin-top:10px;">Position 1: Left Arc Station (Left Phase)</th></tr>
+                        <tr>
+                            <td width="33%"><div class="img-box">[ PASTE 2: Camden Inc - Full ]</div></td>
+                            <td width="33%"><div class="img-box">[ PASTE 3: Camden Inc - Top (Dead End) ]</div></td>
+                            <td width="33%"><div class="img-box">[ PASTE 4: Camden Inc - Btm (Live End) ]</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="img-box">[ PASTE 5: Edwaleni Out - Full ]</div></td>
+                            <td><div class="img-box">[ PASTE 6: Edwaleni Out - Top (Dead End) ]</div></td>
+                            <td><div class="img-box">[ PASTE 7: Edwaleni Out - Btm (Live End) ]</div></td>
+                        </tr>
+                        <tr><th colspan="3" style="background:#e2e8f0; margin-top:10px;">Position 2: Center Arc Station (Center Phase)</th></tr>
+                        <tr>
+                            <td><div class="img-box">[ PASTE 8: Camden Inc - Full ]</div></td>
+                            <td><div class="img-box">[ PASTE 9: Camden Inc - Top (Dead End) ]</div></td>
+                            <td><div class="img-box">[ PASTE 10: Camden Inc - Btm (Live End) ]</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="img-box">[ PASTE 11: Edwaleni Out - Full ]</div></td>
+                            <td><div class="img-box">[ PASTE 12: Edwaleni Out - Top (Dead End) ]</div></td>
+                            <td><div class="img-box">[ PASTE 13: Edwaleni Out - Btm (Live End) ]</div></td>
+                        </tr>
+                        <tr><th colspan="3" style="background:#e2e8f0; margin-top:10px;">Position 3: Right Arc Station (Right Phase)</th></tr>
+                        <tr>
+                            <td><div class="img-box">[ PASTE 14: Camden Inc - Full ]</div></td>
+                            <td><div class="img-box">[ PASTE 15: Camden Inc - Top (Dead End) ]</div></td>
+                            <td><div class="img-box">[ PASTE 16: Camden Inc - Btm (Live End) ]</div></td>
+                        </tr>
+                        <tr>
+                            <td><div class="img-box">[ PASTE 17: Edwaleni Out - Full ]</div></td>
+                            <td><div class="img-box">[ PASTE 18: Edwaleni Out - Top (Dead End) ]</div></td>
+                            <td><div class="img-box">[ PASTE 19: Edwaleni Out - Btm (Live End) ]</div></td>
+                        </tr>
+                    </table><br clear="all" style="page-break-before:always" />`;
+                }
+
+                qitpPagesHtml += generateQITP(t, t.date); 
+            });
+
+            let displayDate = isWeekly ? exportDates[0] + " to " + exportDates[exportDates.length-1] : activeDate;
+            let weeklySummaryHtml = isWeekly ? `<h2>1. Executive Weekly Summary</h2><p style="font-size: 11pt; line-height: 1.6;"><b>Reporting Period:</b> ${displayDate}<br><b>Towers Completed This Week:</b> ${tTotal.toFixed(1)}<br><b>Total Project Completion:</b> ${grandTotalTowers.toFixed(1)} / 515 (${pctComplete}%)<br></p><br>` : '';
+
+            let html = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Site Report</title>
+            <style>
+                @page Section1 { size: 595.3pt 841.9pt; margin: 1in; mso-header-margin: .5in; mso-footer-margin: .5in; mso-paper-source: 0; }
+                div.Section1 { page: Section1; }
+                @page Section2 { size: 841.9pt 595.3pt; mso-page-orientation: landscape; margin: 0.25in; mso-header-margin: .5in; mso-footer-margin: .5in; mso-paper-source: 0; }
+                div.Section2 { page: Section2; }
+                body{font-family:'Arial',sans-serif;font-size:10pt;color:#1e293b}
+                h1{color:#0f172a;font-size:16pt;text-transform:uppercase;margin-bottom:5px;letter-spacing:1px;text-align:center}
+                h2{color:#1e40af;font-size:12pt;background:#eff6ff;padding:6px 10px;margin-top:25px;border-left:4px solid #3b82f6;text-transform:uppercase}
+                h3{color:#334155;font-size:11pt;border-bottom:2px solid #e2e8f0;margin-top:20px;padding-bottom:5px}
+                table{width:100%;border-collapse:collapse;margin-top:10px} th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;vertical-align:top;font-size:9.5pt}
+                th{background-color:#f8fafc;font-weight:bold;color:#475569;text-transform:uppercase}
+                .doc-control{background-color:#f1f5f9;border:2px solid #94a3b8;margin-bottom:20px} .doc-control th{background-color:#e2e8f0}
+                .placeholder-box{border:2px dashed #3b82f6;padding:50px;text-align:center;color:#3b82f6;font-weight:bold;margin:15px 0;background:#f8fafc}
+                .photo-table td{padding:5px} .img-box{border:1px dashed #94a3b8;padding:30px 10px;text-align:center;color:#64748b;font-size:8pt;background:#ffffff}
+                .chrono-box{background:#f8fafc;border:1px solid #cbd5e1;padding:12px;font-family:'Courier New',monospace;font-size:9pt;white-space:pre-wrap}
+                .highlight-row{background:#eff6ff;font-weight:bold}
+                .q-table { width: 100%; border-collapse: collapse; font-size: 6.5pt; text-align: center; }
+                .q-table td, .q-table th { border: none; padding: 2px; word-wrap: break-word; }
+                .q-table .b { border: 1px solid #000; }
+                .q-table .l { text-align: left; }
+                .q-table .dark { background: #cbd5e1; font-weight: bold; text-transform: uppercase; }
+            </style>
+            </head>
+            <body>
+            <div class="Section1">
+                <div style="text-align: center; margin-top: 80px;">
+                    <h1 style="font-size: 26pt; color: #0f172a; margin-bottom: 5px;">CAMDEN-EDWALENI 400KV</h1>
+                    <h2 style="font-size: 16pt; color: #3b82f6; border: none; background: transparent; margin-top: 0; text-align: center;">RE-INSULATION PROJECT</h2>
+                    <br><br><div class="placeholder-box" style="padding: 150px 20px; font-size: 14pt;">[ PASTE FULL PAGE HERO IMAGE OF TOWER WORKS HERE ]</div><br><br><br>
+                    <p style="font-size: 14pt;"><b>Report Type:</b> ${reportTitle}</p>
+                    <p style="font-size: 14pt;"><b>Date / Period:</b> ${displayDate}</p>
+                    <p style="font-size: 14pt;"><b>Prepared By:</b> Thabiso Mahlangu (AE Site Supervisor)</p>
+                </div>
+                <br clear="all" style="page-break-before:always" />
+
+                <h2 style="text-align: center; border:none; background:transparent;">TABLE OF CONTENTS</h2>
+                <ul style="list-style-type: none; font-size: 12pt; line-height: 2.0; padding-left: 20px;">
+                    ${isWeekly ? `<li><b>1.</b> Executive Weekly Summary</li><li><b>2.</b> Daily Progress & Environmental Overview</li><li><b>3.</b> Project Controls: Forward Planning & Risks</li>` : `<li><b>1.</b> Executive Project Status & Environment</li><li><b>2.</b> Project Controls: Forward Planning & Risks</li>`}
+                    <li><b>${isWeekly ? "4" : "3"}.</b> Site Logistics & Chronological Timeline</li>
+                    <li><b>${isWeekly ? "5" : "4"}.</b> HSE, Biosecurity & Environmental Compliance</li>
+                    <li><b>${isWeekly ? "6" : "5"}.</b> Detailed Tower Production & GPS Log</li>
+                    <li><b>${isWeekly ? "7" : "6"}.</b> Hardware Master Inventory (Utilization & Scrap)</li>
+                    <li><b>${isWeekly ? "8" : "7"}.</b> Individual Tower QA & Photographic Verification</li>
+                </ul>
+                <br clear="all" style="page-break-before:always" />
+
+                <table class="doc-control">
+                    <tr><th colspan="4" style="font-size: 14pt; text-align:center;">DOCUMENT CONTROL</th></tr>
+                    <tr><th width="20%">Contract No.</th><td width="30%">32/MOT/2025</td><th width="20%">Date</th><td width="30%"><b>${displayDate}</b></td></tr>
+                    <tr><th>Project Name</th><td>Camden-Edwaleni 400kV Re-insulation</td><th>Prepared By</th><td>Thabiso Mahlangu (AE Site Supervisor)</td></tr>
+                    <tr><th>Client</th><td>MOTRACO / Eskom NTCSA / EEC</td><th>Quality Standard</th><td>ISO 9001 / LES 2207</td></tr>
+                    <tr><th>Distribution</th><td colspan="3">Virgilio Laisse (MOTRACO), Delisa Madonsela (Eskom), United Mavuso (EEC), Riaz Vajeth (Rhythm)</td></tr>
+                </table>
+
+                ${weeklySummaryHtml}
+
+                <h2>${isWeekly ? "2. Daily Progress & Environmental Overview" : "1. Executive Project Status & Environment"}</h2>
+                <table>
+                    <tr class="highlight-row">
+                        <td width="25%"><b>CUMULATIVE PROJECT PROGRESS</b></td><td width="25%"><b>${grandTotalTowers.toFixed(1)} / ${totalProjTowers} Towers Complete</b></td>
+                        <td width="25%"><b>PRODUCTION THIS PERIOD</b></td><td width="25%" style="color:#10b981;"><b>+ ${tTotal.toFixed(1)} Towers</b></td>
+                    </tr>
+                    <tr><td><b>% COMPLETE</b></td><td><b>${pctComplete}%</b></td><td><b>DEFECT SCOPE</b></td><td>${dActive.defectScope || "N/A"}</td></tr>
+                    <tr><td><b>WEATHER CONDITIONS</b></td><td>${dActive.wthr || "N/A"}</td><td><b>SCHEDULE STATUS</b></td><td>${dActive.isDelay === "No" ? "<span style='color:green;'>ON SCHEDULE</span>" : "<span style='color:red;'>DELAY INCURRED</span>"}</td></tr>
+                    <tr><td><b>AMBIENT TEMPERATURE</b></td><td>${dActive.envTemp || "N/A"}</td><td><b>HUMIDITY</b></td><td>${dActive.envHum || "N/A"}</td></tr>
+                    <tr><td><b>PEAK WIND SPEED</b></td><td>${dActive.envWind || "N/A"}</td><td><b>TOTAL SITE HEADCOUNT</b></td><td>${dActive.headcount || "N/A"} Personnel</td></tr>
+                    <tr><td><b>PLANT / EQUIPMENT ON SITE</b></td><td>${dActive.plant || "N/A"}</td><td><b>VEHICLE REGISTRATIONS</b></td><td>${dActive.regs || "N/A"}</td></tr>
+                    <tr><td><b>OUTAGE STATUS</b></td><td>${dActive.outage || "N/A"}</td><td><b>STANDING TIME CATEGORY</b></td><td>${dActive.isDelay || "No Delay"}</td></tr>
+                </table>
+
+                ${isWeekly ? `
+                <h2>3. Standing Time & Delay Claims Register</h2>
+                <table>
+                    <tr><th>Date</th><th>Towers Produced</th><th>Delay Category</th><th>Outage Grid Status</th><th>Weather Log</th></tr>
+                    ${standingTimeHtml || '<tr><td colspan="5" align="center">No delays recorded this period.</td></tr>'}
+                </table>` : ''}
+
+                <h2>${isWeekly ? "4." : "2."} Project Controls: Forward Planning & Risks</h2>
+                <table>
+                    <tr><th width="30%">Look-Ahead Plan</th><td>${combinedLookAhead || 'N/A'}</td></tr>
+                    <tr><th>Early Warning Notices (EWN)</th><td>${combinedEWN || 'None issued.'}</td></tr>
+                    <tr><th>Non-Conformance Reports (NCR)</th><td>${combinedNCR || 'None issued. Zero QA deviations.'}</td></tr>
+                </table>
+
+                <h2>${isWeekly ? "5." : "3."} Site Logistics & Chronological Timeline</h2>
+                <table><tr><th width="30%">Site Register<br>(Authorised Staff & Visitors)</th><td>${attendanceOutput}</td></tr></table>
+                <h3>Chronological Daily Event Log</h3>
+                <div class="chrono-box">${combinedChrono || 'No events logged.'}</div>
+
+                <h2>${isWeekly ? "6." : "4."} HSE, Biosecurity & Environmental Compliance</h2>
+                <table>
+                    <tr class="highlight-row"><th>Unsafe Acts</th><th>Near Misses</th><th>First Aid Cases</th><th>Lost Time Injuries (LTI)</th></tr>
+                    <tr><td align="center">${tUA}</td><td align="center">${tNM}</td><td align="center">${tFA}</td><td align="center" style="${tLTI>0?'color:red;font-weight:bold;':''}">${tLTI}</td></tr>
+                    <tr><th colspan="4">HSE & Environmental Notes</th></tr>
+                    <tr><td colspan="4">${combinedSafety}<br>${combinedEnv}</td></tr>
+                </table>
+
+                <br clear="all" style="page-break-before:always" />
+
+                <h2>${isWeekly ? "7." : "5."} Detailed Tower Production & GPS Log</h2>
+                ${allTowers.length > 0 ? `<table><tr><th width="12%">Date</th><th width="12%">Tower No.</th><th width="20%">Type</th><th width="25%">Farm & GPS Coordinates</th><th width="31%">Engineering Notes / QA Deviations</th></tr>` + allTowers.map(t => `<tr><td>${t.date}</td><td><b>${t.num || 'N/A'}</b></td><td>${t.type || 'N/A'}</td><td>Farm: ${t.farm || 'N/A'}<br>GPS: ${t.gps || 'N/A'}</td><td>${t.notes || 'N/A'}</td></tr>`).join('') + `</table>` : ''}
+
+                <h2>${isWeekly ? "8." : "6."} Hardware Master Inventory (Utilization & Scrap)</h2>
+                <table>
+                    <tr><th>MATERIAL COMPONENT (LES 2207)</th><th>BASIC QUANTITIES</th><th>SPARE</th><th>TOTAL QUANTITIES</th><th>INSTALLED (${displayDate})</th><th>TOTAL INSTALLED TO DATE</th><th>MASTER STOCK REMAINING</th></tr>
+                    <tr><td>120kN Composite Longrods</td><td align="center">1417</td><td align="center">20</td><td align="center">1437</td><td align="center">${u120}</td><td align="center">${grandU120}</td><td align="center"><b>${masterInv.i120 - grandU120}</b></td></tr>
+                    <tr><td>210kN Composite Longrods</td><td align="center">864</td><td align="center">20</td><td align="center">884</td><td align="center">${u210}</td><td align="center">${grandU210}</td><td align="center"><b>${masterInv.i210 - grandU210}</b></td></tr>
+                    <tr><td>Socket Clevis (for I-String and V-String) 120kN</td><td align="center">1498</td><td align="center">15</td><td align="center">1513</td><td align="center">${usclv}</td><td align="center">${grandUsclv}</td><td align="center"><b>${masterInv.sclv - grandUsclv}</b></td></tr>
+                    <tr><td>Ball Oval Eye (for I-String) 120kN</td><td align="center">1310</td><td align="center">15</td><td align="center">1325</td><td align="center">${uboeye}</td><td align="center">${grandUboeye}</td><td align="center"><b>${masterInv.boeye - grandUboeye}</b></td></tr>
+                    <tr><td>Ball Clevis (for V-String) 120kN</td><td align="center">188</td><td align="center">15</td><td align="center">203</td><td align="center">${ubclv}</td><td align="center">${grandUbclv}</td><td align="center"><b>${masterInv.bclv - grandUbclv}</b></td></tr>
+                    <tr><td>Shackles for Suspension Assemblies</td><td align="center">1498</td><td align="center">15</td><td align="center">1513</td><td align="center">${ushk}</td><td align="center">${grandUshk}</td><td align="center"><b>${masterInv.shk - grandUshk}</b></td></tr>
+                </table>
+
+                <br clear="all" style="page-break-before:always" />
+
+                <h2>${isWeekly ? "9." : "7."} Individual Tower QA & Photographic Verification</h2>
+                ${photoPagesHtml}
+            </div>
+            ${qitpPagesHtml}
+            </body></html>`;
+            
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob); const a = document.createElement('a');
+            a.href = url; a.download = `${filePrefix}_Camden_${isWeekly ? exportDates[0].replace(/ /g, '') : activeDate.replace(/ /g, '')}.doc`;
+            document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>

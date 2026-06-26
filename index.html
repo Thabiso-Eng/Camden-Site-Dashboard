@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pole Inspection Capture</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --bg-color: #f4f7f6;
+            --surface: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border: #cccccc;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 16px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .form-section h2 {
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--primary);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], 
+        input[type="number"], 
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            background-color: #fafafa;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fff;
+        }
+
+        .gps-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .gps-group input {
+            flex: 1;
+            background-color: #e9ecef;
+        }
+        
+        #accuracyDisplay {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .accuracy-good { color: var(--success); }
+        .accuracy-ok { color: var(--warning); }
+        .accuracy-poor { color: var(--danger); }
+
+        button.action-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        button.action-btn.secondary {
+            background-color: #6c757d;
+        }
+
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            padding: 12px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .bottom-bar button {
+            flex: 1;
+            max-width: 300px;
+            background-color: var(--success);
+        }
+
+        #recordCount {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pole Inspection Capture</h1>
+    </header>
+
+    <div class="container">
+        <form id="inspectionForm">
+            
+            <div class="form-section">
+                <h2>Location & Time</h2>
+                <div class="input-group">
+                    <label>Coordinates (Lat / Long)</label>
+                    <div class="gps-group">
+                        <input type="text" id="latitude" placeholder="Latitude" readonly required>
+                        <input type="text" id="longitude" placeholder="Longitude" readonly required>
+                    </div>
+                    <div id="accuracyDisplay">Accuracy: Waiting for GPS...</div>
+                    <button type="button" class="action-btn secondary" id="gpsBtn" onclick="getLocation()">Lock High-Accuracy GPS</button>
+                </div>
+                <div class="input-group">
+                    <label>Date of Inspection</label>
+                    <input type="text" id="dateInp" placeholder="YYYY-MM-DD" required>
+                </div>
+                <div class="input-group">
+                    <label>Time</label>
+                    <input type="text" id="timeInp" placeholder="HH:MM:SS" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>General Info</h2>
+                <div class="input-group">
+                    <label>Feature Name</label>
+                    <input type="text" id="featureName" value="Pole Inspection">
+                </div>
+                <div class="input-group">
+                    <label>Sector</label>
+                    <input type="text" id="sector" placeholder="e.g., East London Sector">
+                </div>
+                <div class="input-group">
+                    <label>CNC</label>
+                    <input type="text" id="cnc" placeholder="e.g., Coastal CNC">
+                </div>
+                <div class="input-group">
+                    <label>Line Inspected</label>
+                    <input type="text" id="lineInspected" placeholder="e.g., Cintsa/Greenacres 2 11kV">
+                </div>
+                <div class="input-group">
+                    <label>Company Name</label>
+                    <input type="text" id="companyName" value="RHYTHM POWER SOLUTIONS PTY LTD">
+                </div>
+                <div class="input-group">
+                    <label>Inspector ID</label>
+                    <input type="text" id="inspectorId">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Pole Details</h2>
+                <div class="input-group">
+                    <label>Pole Number</label>
+                    <input type="text" id="poleNumber" required>
+                </div>
+                <div class="input-group">
+                    <label>Pole Height (m)</label>
+                    <select id="poleHeight">
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Year of Manufacture</label>
+                    <input type="number" id="yearManufacture" placeholder="YYYY">
+                </div>
+                <div class="input-group">
+                    <label>Specie</label>
+                    <select id="specie">
+                        <option value="Eucalyptus">Eucalyptus</option>
+                        <option value="Pine">Pine</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Line Configuration</label>
+                    <input type="text" id="lineConfig" placeholder="e.g., Delta Intermediate">
+                </div>
+                <div class="input-group">
+                    <label>Pole Position</label>
+                    <input type="text" id="polePosition" placeholder="e.g., Inline Intermediate">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Condition & Classes</h2>
+                <div class="input-group">
+                    <label>Treated Externally?</label>
+                    <select id="treatedExt"><option>No</option><option>Yes</option></select>
+                </div>
+                <div class="input-group">
+                    <label>Treated Internally?</label>
+                    <select id="treatedInt"><option>No</option><option>Yes</option></select>
+                </div>
+                
+                <div class="input-group">
+                    <label>A/ Leg Class</label>
+                    <select id="aLeg"><option>N/A</option><option>C1</option><option>C2</option><option>C4</option></select>
+                </div>
+                <div class="input-group">
+                    <label>B/ Leg Class</label>
+                    <select id="bLeg"><option>N/A</option><option>C1</option><option>C2</option><option>C4</option></select>
+                </div>
+                <div class="input-group">
+                    <label>C/ Leg Class</label>
+                    <select id="cLeg"><option>N/A</option><option>C1</option><option>C2</option><option>C4</option></select>
+                </div>
+                <div class="input-group">
+                    <label>D/ Leg Class</label>
+                    <select id="dLeg"><option>N/A</option><option>C1</option><option>C2</option><option>C4</option></select>
+                </div>
+
+                <div class="input-group">
+                    <label>Pole Twist</label>
+                    <input type="text" id="poleTwist" value="No Twist">
+                </div>
+                <div class="input-group">
+                    <label>X Arm Defects</label>
+                    <input type="text" id="xArmDefects" value="Not Applicable">
+                </div>
+                <div class="input-group">
+                    <label>Ground Line</label>
+                    <input type="text" id="groundLine" placeholder="e.g., 200">
+                </div>
+                <div class="input-group">
+                    <label>Comments / Reason</label>
+                    <input type="text" id="comments" placeholder="Any additional notes...">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Equipment</h2>
+                <div class="input-group"><label>Equip 1</label><input type="text" id="equip1" value="No Equip"></div>
+                <div class="input-group"><label>Equip 2</label><input type="text" id="equip2" value="No Equip"></div>
+                <div class="input-group"><label>Equip 3</label><input type="text" id="equip3" value="No Equip"></div>
+                <div class="input-group"><label>Equip 4</label><input type="text" id="equip4" value="No Equip"></div>
+                <div class="input-group"><label>Equip 5</label><input type="text" id="equip5" value="No Equip"></div>
+                <div class="input-group"><label>Equip 6</label><input type="text" id="equip6" value="No Equip"></div>
+                <div class="input-group"><label>Equip 7</label><input type="text" id="equip7" value="No Equip"></div>
+            </div>
+
+            <input type="hidden" id="treater" value="TTP">
+            <input type="hidden" id="terrain" value="Normal">
+            <input type="hidden" id="vegetation" value="Grassland">
+            <input type="hidden" id="poleAttributes" value="Not Applicable">
+
+        </form>
+    </div>
+
+    <div class="bottom-bar">
+        <div style="width: 100%; display: flex; flex-direction: column;">
+            <div id="recordCount">Saved Records: 0</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn" onclick="saveRecord()">Save Pole</button>
+                <button class="action-btn secondary" onclick="exportCSV()">Export CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setCurrentDateTime() {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const timeStr = now.toTimeString().split(' ')[0];
+            document.getElementById('dateInp').value = dateStr;
+            document.getElementById('timeInp').value = timeStr;
+        }
+
+        window.onload = function() {
+            setCurrentDateTime();
+            updateRecordCount();
+        };
+
+        // Advanced GPS Configuration
+        function getLocation() {
+            const btn = document.getElementById('gpsBtn');
+            const accDisplay = document.getElementById('accuracyDisplay');
+            
+            btn.innerText = "Acquiring Satellites...";
+            btn.style.backgroundColor = "#ffc107"; // Warning color while loading
+            btn.style.color = "#000";
+            
+            if (navigator.geolocation) {
+                // Requesting highest accuracy, forcing it to avoid cached data
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 15000, // wait up to 15 seconds for a strong lock
+                    maximumAge: 0   // force device to not use cached location
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy; // in meters
+
+                        document.getElementById('latitude').value = lat.toFixed(6) + " S";
+                        document.getElementById('longitude').value = lng.toFixed(6) + " E";
+
+                        // Visual feedback on accuracy
+                        if(accuracy <= 3) {
+                            accDisplay.innerHTML = `Accuracy: <span class="accuracy-good">${accuracy.toFixed(1)}m (Excellent)</span>`;
+                        } else if(accuracy <= 10) {
+                            accDisplay.innerHTML = `Accuracy: <span class="accuracy-ok">${accuracy.toFixed(1)}m (Acceptable)</span>`;
+                        } else {
+                            accDisplay.innerHTML = `Accuracy: <span class="accuracy-poor">${accuracy.toFixed(1)}m (Poor - wait and try again)</span>`;
+                        }
+
+                        btn.innerText = "Lock High-Accuracy GPS";
+                        btn.style.backgroundColor = "#6c757d";
+                        btn.style.color = "#fff";
+                    }, 
+                    function(error) {
+                        let errorMsg = "Unknown Error";
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg = "Permission Denied. Please allow location access in your browser settings.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg = "Location information unavailable. Check device GPS settings.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg = "The request to get user location timed out. Try again in an open area.";
+                                break;
+                        }
+                        alert("GPS Error: " + errorMsg);
+                        accDisplay.innerHTML = "Accuracy: Error getting GPS";
+                        btn.innerText = "Retry GPS";
+                        btn.style.backgroundColor = "#dc3545";
+                        btn.style.color = "#fff";
+                    }, 
+                    options
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        let records = JSON.parse(localStorage.getItem('poleRecords')) || [];
+
+        function updateRecordCount() {
+            document.getElementById('recordCount').innerText = `Saved Records: ${records.length}`;
+        }
+
+        function saveRecord() {
+            const record = {
+                Latitude: document.getElementById('latitude').value,
+                Longitude: document.getElementById('longitude').value,
+                FeatureName: document.getElementById('featureName').value,
+                SECTOR: document.getElementById('sector').value,
+                CNC: document.getElementById('cnc').value,
+                LineInspected: document.getElementById('lineInspected').value,
+                DateInInspection: document.getElementById('dateInp').value,
+                Time: document.getElementById('timeInp').value,
+                Treater: document.getElementById('treater').value,
+                YearOfManufact: document.getElementById('yearManufacture').value,
+                PoleNumber: document.getElementById('poleNumber').value,
+                Terrain: document.getElementById('terrain').value,
+                Vegetation: document.getElementById('vegetation').value,
+                Specie: document.getElementById('specie').value,
+                TreatedExternally: document.getElementById('treatedExt').value,
+                TreatedInternally: document.getElementById('treatedInt').value,
+                LineConfiguration: document.getElementById('lineConfig').value,
+                PolePosition: document.getElementById('polePosition').value,
+                XArmDefects: document.getElementById('xArmDefects').value,
+                Equip1: document.getElementById('equip1').value,
+                Equip2: document.getElementById('equip2').value,
+                Equip3: document.getElementById('equip3').value,
+                Equip4: document.getElementById('equip4').value,
+                Equip5: document.getElementById('equip5').value,
+                Equip6: document.getElementById('equip6').value,
+                Equip7: document.getElementById('equip7').value,
+                PoleHeight: document.getElementById('poleHeight').value,
+                GroundLine: document.getElementById('groundLine').value,
+                PoleAttributes: document.getElementById('poleAttributes').value,
+                PoleTwist: document.getElementById('poleTwist').value,
+                ALegClass: document.getElementById('aLeg').value,
+                BLegClass: document.getElementById('bLeg').value,
+                CLegClass: document.getElementById('cLeg').value,
+                DLegClass: document.getElementById('dLeg').value,
+                CompanyName: document.getElementById('companyName').value,
+                InspectorID: document.getElementById('inspectorId').value,
+                Comments: document.getElementById('comments').value
+            };
+
+            if(!record.PoleNumber || !record.Latitude) {
+                alert("Please ensure Pole Number and GPS Coordinates are captured before saving.");
+                return;
+            }
+
+            records.push(record);
+            localStorage.setItem('poleRecords', JSON.stringify(records));
+            updateRecordCount();
+            
+            alert(`Pole ${record.PoleNumber} saved successfully!`);
+            
+            document.getElementById('poleNumber').value = '';
+            document.getElementById('comments').value = '';
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('accuracyDisplay').innerHTML = 'Accuracy: Waiting for next GPS lock...';
+            setCurrentDateTime();
+        }
+
+        function exportCSV() {
+            if (records.length === 0) {
+                alert("No records to export.");
+                return;
+            }
+
+            const headers = [
+                "Latitude", "Longitude", "FeatureName", "SECTOR", "CNC", "Line inspected", 
+                "Date in Inspection", "Time", "Treater", "Year of Manufact", "Pole Number", 
+                "Terrain", "Vegetation", "Specie", "Treated Externally", "Treated Internally", 
+                "Line Configuration", "Pole Position", "X Arm defects", "Equip 1", "Equip 2", 
+                "Equip 3", "Equip 4", "Equip 5", "Equip 6", "Equip 7", "Pole Height", "Ground line", 
+                "Pole Attributes", "Pole Twist", "A/ Leg Class", "B/ Leg Class", "C/ Leg Class", 
+                "D/ Leg Class", "Company Name", "Inspector ID", "Comments/Reason"
+            ];
+
+            let csvContent = headers.join(",") + "\n";
+
+            records.forEach(r => {
+                const row = [
+                    r.Latitude, r.Longitude, r.FeatureName, r.SECTOR, r.CNC, r.LineInspected,
+                    r.DateInInspection, r.Time, r.Treater, r.YearOfManufact, r.PoleNumber,
+                    r.Terrain, r.Vegetation, r.Specie, r.TreatedExternally, r.TreatedInternally,
+                    r.LineConfiguration, r.PolePosition, r.XArmDefects, r.Equip1, r.Equip2,
+                    r.Equip3, r.Equip4, r.Equip5, r.Equip6, r.Equip7, r.PoleHeight, r.GroundLine,
+                    r.PoleAttributes, r.PoleTwist, r.ALegClass, r.BLegClass, r.CLegClass,
+                    r.DLegClass, r.CompanyName, r.InspectorID, r.Comments
+                ];
+                
+                const formattedRow = row.map(field => {
+                    let strField = String(field || "");
+                    return strField.includes(",") ? `"${strField}"` : strField;
+                });
+
+                csvContent += formattedRow.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Pole_Inspection_Export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            if(confirm("Export complete. Do you want to clear the saved records from your phone?")) {
+                records = [];
+                localStorage.removeItem('poleRecords');
+                updateRecordCount();
+            }
+        }
+    </script>
+</body>
+</html>
